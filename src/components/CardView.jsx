@@ -9,19 +9,13 @@ function CardView({ card, onClick, disabled, you, qty }) {
     (card.cost.gold && you.gold < card.cost.gold) ||
     (card.cost.sci && you.sci < card.cost.sci)
   );
-  const outOfStock = qty != null && qty <= 0;
-  const isDisabled = disabled || cantAfford || outOfStock;
+  const isDisabled = disabled || cantAfford;
 
   return (
     <div
-      className={`card cat-${card.cat} ${isDisabled ? "disabled" : ""} ${outOfStock ? "out-of-stock" : ""}`}
+      className={`card cat-${card.cat} ${isDisabled ? "disabled" : ""}`}
       onClick={() => !isDisabled && onClick && onClick(card)}
     >
-      {qty != null && (
-        <span className={`qty-badge ${qty <= 0 ? "empty" : ""}`}>
-          {qty > 0 ? `×${qty}` : "Sold out"}
-        </span>
-      )}
       <div className="card-cat">
         <span className="cat-badge">{card.cat.toUpperCase()}</span>
         {card.chance != null && <span>{card.chance}%</span>}
