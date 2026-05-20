@@ -9,14 +9,6 @@
   const STARTING_GOLD = 7;
   const TOTAL_ROUNDS_DEFAULT = 20;
 
-  // Starter store quantities (per-game)
-  const STARTER_STORE = {
-    "infantry": 3, "artillery": 2, "spy": 2,
-    "tank": 1, "drone": 1,
-    "factory": 2, "bank": 1, "agriculture": 4,
-    "defence": 2, "mil-reduce": 1, "sci-center": 2,
-  };
-
   function pickFrom(pool, used) {
     const available = pool.filter(x => !used.includes(x));
     if (available.length) return available[Math.floor(Math.random()*available.length)];
@@ -163,7 +155,6 @@
       "meta/year": 1,
       "meta/turnIdx": 0,
       "meta/turnDeadline": Date.now() + TURN_SECONDS * 1000,
-      "store": { ...STARTER_STORE },
     });
 
     await gref(code, "log").push({
@@ -194,13 +185,6 @@
     if (!game || game.meta.status !== "playing") throw new Error("Game not in progress.");
     if (!_isYourTurn(game, uid)) throw new Error("Not your turn.");
 
-    // Decrement store atomically
-    const tx = await gref(code, `store/${cardId}`).transaction((q) => {
-      if (q == null || q <= 0) return; // abort
-      return q - 1;
-    });
-    if (!tx.committed) throw new Error("Sold out.");
-
     const p = game.players[uid];
     // Logistics Doctrine: −1 gold per stack on military cards (floor at 0)
     const logistics = game.structures?.[uid]?.["mil-reduce"] || 0;
@@ -210,8 +194,6 @@
     }
     const sci = card.cost.sci || 0;
     if (p.gold < gold || p.sci < sci) {
-      // refund
-      await gref(code, `store/${cardId}`).transaction(q => (q || 0) + 1);
       throw new Error("Not enough resources.");
     }
 
@@ -305,9 +287,6 @@
         stolen = Math.min(dmg, game.players[targetUid].gold || 0);
         await gref(code, `players/${uid}/gold`).transaction(g => (g||0) + stolen);
       }
-    } else if (card.id === "spy") {
-      // Caught: return card to store, declare war.
-      await gref(code, `store/spy`).transaction(q => (q || 0) + 1);
     }
 
     // Declare war (mutual)
@@ -333,7 +312,7 @@
     let text;
     if (card.id === "spy") {
       text = hit ? `${yourName}'s Spy infiltrated ${tgtName} and stole ${stolen}M.`
-                 : `${yourName}'s Spy was caught in ${tgtName} — card returned to store.`;
+                 : `${yourName}'s Spy was caught in ${tgtName} and the operation failed.`;
     } else {
       text = hit ? `${yourName} struck ${tgtName} with ${card.name} — ${dmg}M lost.`
                  : `${yourName}'s ${card.name} missed ${tgtName}.`;

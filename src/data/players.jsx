@@ -11,19 +11,7 @@ window.DEMO_PLAYERS = [
 
 window.DEMO_HAND = ["infantry", "factory", "sci-center", "spy", "agriculture"];
 
-window.DEMO_STORE = [
-  { id: "infantry",   qty: 3 },
-  { id: "artillery",  qty: 2 },
-  { id: "spy",        qty: 2 },
-  { id: "tank",       qty: 1 },
-  { id: "drone",      qty: 1 },
-  { id: "factory",    qty: 2 },
-  { id: "bank",       qty: 1 },
-  { id: "agriculture",qty: 4 },
-  { id: "defence",    qty: 2 },
-  { id: "mil-reduce", qty: 1 },
-  { id: "sci-center", qty: 2 },
-];
+window.DEMO_STORE = window.CARDS || [];
 
 window.DEMO_LOG = [
   { year: 4, text: "Mira researched Science Center (+3 SP/year).", kind: "sci" },
@@ -31,6 +19,6 @@ window.DEMO_LOG = [
   { year: 5, text: "Theo attacked you with Infantry — hit for 3M.", kind: "war" },
   { year: 5, text: "You are now at war with Veridia.", kind: "war" },
   { year: 6, text: "Nori reached 18 SP.", kind: "sci" },
-  { year: 6, text: "You drew Spy from the shared store.", kind: "" },
+  { year: 6, text: "You acquired Spy.", kind: "" },
   { year: 7, text: "Year 7 begins. Peaceful players gain +1M.", kind: "" },
 ];

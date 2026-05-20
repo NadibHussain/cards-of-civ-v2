@@ -23,7 +23,6 @@ function Game({ game, code, uid, loading, onLeave }) {
 
   const handObj = game?.hand?.[uid] || {};
   const handEntries = Object.entries(handObj); // [[key, cardId], ...]
-  const store = game?.store || {};
 
   const remaining = window.useTurnTimer(meta.turnDeadline);
 
@@ -68,7 +67,6 @@ function Game({ game, code, uid, loading, onLeave }) {
 
   function buyFromStore(card) {
     if (!yourTurn) return;
-    if ((store[card.id] || 0) <= 0) return showToast("Sold out");
     safe(() => window.api.buyCard(code, card.id));
   }
 
@@ -88,8 +86,8 @@ function Game({ game, code, uid, loading, onLeave }) {
     .map(([k,v]) => ({ ...v, _k: k }))
     .sort((a,b) => b.ts - a.ts) : [];
 
-  const storeCardList = Object.keys(store).map(id => ({ ...getCard(id), qty: store[id] })).filter(c => c.id);
-  const storeTotal = Object.values(store).reduce((a,b) => a+b, 0);
+  const storeCardList = (window.CARDS || []);
+  const storeTotal = storeCardList.length;
 
   return (
     <div className={`board ${handOpen && handEntries.length > 0 ? "hand-open" : ""}`} data-screen-label="05 Game">
@@ -267,8 +265,8 @@ function Game({ game, code, uid, loading, onLeave }) {
         <div className="modal-backdrop" onClick={() => setShopOpen(false)}>
           <div className="modal shop-modal" onClick={(e) => e.stopPropagation()}>
             <a className="close" onClick={() => setShopOpen(false)}>✕</a>
-            <h2>Shared Store</h2>
-            <p className="lead">Open to all civilizations. First to claim a card takes it.</p>
+            <h2>Store</h2>
+            <p className="lead">Cards are always available. Buy any card you can afford.</p>
             <div className="shop-tabs">
               {["all","military","economy","science"].map(t => (
                 <button key={t}
@@ -281,7 +279,7 @@ function Game({ game, code, uid, loading, onLeave }) {
             <div className="shop-body">
               <div className="shop-grid">
                 {storeCardList.filter(c => shopTab==="all" || c.cat===shopTab).map(c => (
-                  <CardView key={c.id} card={c} qty={c.qty} onClick={() => buyFromStore(c)} you={you} disabled={!yourTurn || busy} />
+                  <CardView key={c.id} card={c} onClick={() => buyFromStore(c)} you={you} disabled={!yourTurn || busy} />
                 ))}
               </div>
             </div>
