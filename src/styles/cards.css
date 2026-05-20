@@ -1,0 +1,133 @@
+/* Card styles (shared between hand, store, rules page) */
+.cat-military { --cat: var(--mil-500); --cat-soft: var(--mil-bg); }
+.cat-economy  { --cat: var(--eco-500); --cat-soft: var(--eco-bg); }
+.cat-science  { --cat: var(--sci-500); --cat-soft: var(--sci-bg); }
+
+.card {
+  --cat: var(--gold-500);
+  --cat-soft: rgba(201,165,90,0.08);
+  background: linear-gradient(180deg, #15192166, #0d11187a), var(--cat-soft);
+  border: 1px solid var(--ink-600);
+  border-radius: var(--radius);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+  transition: transform .12s, border-color .15s, box-shadow .15s;
+  cursor: pointer;
+  min-height: 200px;
+}
+.card:hover {
+  transform: translateY(-2px);
+  border-color: var(--cat);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4), 0 0 0 1px var(--cat);
+}
+.card .card-cat {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+}
+.card .card-cat .cat-badge { color: var(--cat); }
+.card .card-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.1;
+  color: var(--parch-50);
+  margin: 2px 0 4px;
+}
+.card .card-art {
+  height: 84px;
+  border: 1px solid color-mix(in oklab, var(--cat) 30%, var(--ink-600));
+  border-radius: var(--radius-sm);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  background:
+    radial-gradient(circle at 50% 38%, color-mix(in oklab, var(--cat) 28%, transparent), transparent 70%),
+    repeating-linear-gradient(45deg, transparent, transparent 7px, rgba(255,255,255,0.03) 7px, rgba(255,255,255,0.03) 8px),
+    var(--cat-soft);
+  color: color-mix(in oklab, var(--cat) 80%, var(--parch-50));
+  position: relative;
+  overflow: hidden;
+}
+.card .card-art .art-glyph {
+  font-family: var(--font-display);
+  font-size: 36px;
+  line-height: 1;
+  color: color-mix(in oklab, var(--cat) 70%, var(--parch-50));
+  text-shadow: 0 2px 8px color-mix(in oklab, var(--cat) 50%, transparent);
+}
+.card .card-art .art-tag {
+  font-family: var(--font-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--cat) 50%, var(--ink-300));
+  margin-top: 2px;
+}
+.card .card-art::before {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border: 1px dashed color-mix(in oklab, var(--cat) 25%, transparent);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.card .card-effect {
+  font-size: 12px;
+  color: var(--ink-200);
+  line-height: 1.4;
+  flex: 1;
+}
+.card .card-effect .hi { color: var(--cat); font-weight: 500; }
+.card .card-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid var(--ink-700);
+  padding-top: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+}
+.card .cost { color: var(--gold-300); }
+.card .cost .ico { color: var(--ink-400); }
+.card .chance { color: var(--ink-300); }
+.card.disabled { opacity: 0.45; cursor: not-allowed; }
+.card.disabled:hover { transform: none; box-shadow: none; }
+
+.card .qty-badge {
+  position: absolute;
+  top: -8px; right: -8px;
+  background: var(--gold-500);
+  color: var(--ink-900);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 2px solid var(--ink-800);
+  z-index: 1;
+}
+.card .qty-badge.empty {
+  background: var(--ink-600);
+  color: var(--ink-300);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.card.out-of-stock { opacity: 0.4; }
+.card.out-of-stock:hover { transform: none; box-shadow: none; }
+
+/* Avatar */
+.avatar {
+  border-radius: 50%;
+  display: grid; place-items: center;
+  font-family: var(--font-display);
+  color: var(--ink-900);
+  flex-shrink: 0;
+}

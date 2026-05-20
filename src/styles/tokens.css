@@ -1,0 +1,44 @@
+/* Design tokens — colors, fonts, spacing */
+:root {
+  --ink-900: #0b0f15;
+  --ink-800: #11161f;
+  --ink-700: #1a2230;
+  --ink-600: #232d3e;
+  --ink-500: #364154;
+  --ink-400: #5a6577;
+  --ink-300: #8b94a6;
+  --ink-200: #b9c0cf;
+  --ink-100: #e3e6ee;
+
+  --parch-50:  #f6efde;
+  --parch-100: #ece2c8;
+  --parch-200: #d9caa5;
+  --parch-300: #b89f72;
+
+  --gold-500: #c9a55a;
+  --gold-400: #dcc183;
+  --gold-300: #ead7a3;
+
+  --mil-500:  #b5503c;
+  --mil-400:  #cc6a55;
+  --mil-bg:   #2a1816;
+
+  --eco-500:  #6b8e5a;
+  --eco-400:  #8aae78;
+  --eco-bg:   #1a2418;
+
+  --sci-500:  #5d7fa8;
+  --sci-400:  #7ea0c9;
+  --sci-bg:   #161e2a;
+
+  --danger:   #d65a4a;
+  --ok:       #6b8e5a;
+
+  --font-display: "DM Serif Display", "Times New Roman", serif;
+  --font-body: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --radius-sm: 4px;
+  --radius:    8px;
+  --radius-lg: 14px;
+}

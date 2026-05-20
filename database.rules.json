@@ -1,0 +1,29 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "games": {
+      "$code": {
+        ".read": "auth != null",
+        ".write": "auth != null",
+        "meta": {
+          ".validate": "newData.hasChildren(['hostUid','status'])"
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && ($uid === auth.uid || data.exists() || root.child('games/'+$code+'/meta/hostUid').val() === auth.uid)"
+          }
+        },
+        "hand": {
+          "$uid": {
+            ".read": "auth != null && ($uid === auth.uid)",
+            ".write": "auth != null"
+          }
+        },
+        "store":      { ".write": "auth != null" },
+        "log":        { ".write": "auth != null" },
+        "structures": { ".write": "auth != null" }
+      }
+    }
+  }
+}

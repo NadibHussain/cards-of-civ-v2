@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0f15" />
+  <title>Cards of Civilization</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Space+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="src/styles/tokens.css" />
+  <link rel="stylesheet" href="src/styles/base.css" />
+  <link rel="stylesheet" href="src/styles/cards.css" />
+  <link rel="stylesheet" href="src/styles/menu.css" />
+  <link rel="stylesheet" href="src/styles/forms.css" />
+  <link rel="stylesheet" href="src/styles/lobby.css" />
+  <link rel="stylesheet" href="src/styles/game.css" />
+  <link rel="stylesheet" href="src/styles/rules.css" />
+  <link rel="stylesheet" href="src/styles/mobile.css" />
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Firebase compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
+  <!-- React + Babel -->
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+  <!-- Data -->
+  <script type="text/babel" src="src/data/cards.jsx"></script>
+  <script type="text/babel" src="src/data/players.jsx"></script>
+
+  <!-- Utils -->
+  <script type="text/babel" src="src/utils/token.jsx"></script>
+
+  <!-- Firebase (init must run before api/hooks) -->
+  <script type="text/babel" src="src/firebase/init.jsx"></script>
+  <script type="text/babel" src="src/firebase/api.jsx"></script>
+  <script type="text/babel" src="src/firebase/hooks.jsx"></script>
+
+  <!-- Components -->
+  <script type="text/babel" src="src/components/Avatar.jsx"></script>
+  <script type="text/babel" src="src/components/CardView.jsx"></script>
+  <script type="text/babel" src="src/components/DevNav.jsx"></script>
+
+  <!-- Screens -->
+  <script type="text/babel" src="src/screens/Menu.jsx"></script>
+  <script type="text/babel" src="src/screens/Create.jsx"></script>
+  <script type="text/babel" src="src/screens/Join.jsx"></script>
+  <script type="text/babel" src="src/screens/Lobby.jsx"></script>
+  <script type="text/babel" src="src/screens/Game.jsx"></script>
+  <script type="text/babel" src="src/screens/End.jsx"></script>
+  <script type="text/babel" src="src/screens/Rules.jsx"></script>
+
+  <!-- Root -->
+  <script type="text/babel" src="src/App.jsx"></script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+/* Mobile responsive layouts */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .app { grid-template-columns: 200px 1fr; }
+  .center-stage { grid-template-columns: 1fr; }
+  .chronicle-float {
+    grid-column: 1;
+    grid-row: auto;
+    max-height: 220px;
+    min-height: 160px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 720px) {
+  /* Devnav becomes overlay */
+  .app { grid-template-columns: 1fr; }
+  .devnav {
+    position: fixed;
+    inset: 0 auto 0 0;
+    width: 260px;
+    transform: translateX(-100%);
+    transition: transform .25s ease;
+    box-shadow: 8px 0 24px rgba(0,0,0,0.5);
+  }
+  .devnav.open { transform: translateX(0); }
+  .devnav-close {
+    display: grid; place-items: center;
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--ink-700);
+    color: var(--ink-200);
+  }
+  .mobile-nav-toggle { display: grid; }
+  .stage { padding-top: 0; }
+
+  /* Menu */
+  .menu .footer { font-size: 9px; padding: 0 16px; gap: 8px; }
+  .menu .actions { grid-template-columns: 1fr; }
+  .menu .crest-row { gap: 12px; font-size: 9px; }
+
+  /* Panels */
+  .panel { padding: 24px 18px; }
+  .panel-wrap { padding: 70px 16px 40px; }
+  .field-row { grid-template-columns: 1fr; }
+  .token-input { gap: 5px; }
+
+  /* Game — stack everything */
+  .board { height: auto; min-height: 100dvh; grid-template-rows: auto 1fr auto; }
+  .topbar {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    text-align: center;
+    padding: 60px 16px 12px;
+  }
+  .topbar .game-id { justify-content: center; }
+  .topbar .turn-info { flex-wrap: wrap; justify-content: center; }
+
+  .center-stage {
+    padding: 16px;
+    gap: 12px;
+  }
+  .board.hand-open .center-stage { padding-bottom: 16px; }
+  /* Hide stage header copy on mobile */
+  .stage-header { display: none; }
+  .opponents-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .opp-card { padding: 8px; gap: 6px; }
+  .opp-card .opp-head { grid-template-columns: 26px 1fr auto; gap: 6px; }
+  .opp-card .name { font-size: 13px; }
+  .opp-card .nation { font-size: 8px; }
+  .opp-card .stats-grid { padding: 6px 0; gap: 2px; }
+  .opp-card .stat .val { font-size: 14px; }
+  .opp-card .stat .lbl { font-size: 7px; }
+  .opp-card .opp-foot { flex-direction: column; align-items: flex-start; }
+  .opp-card .badges { width: 100%; }
+  .opp-card .badge { font-size: 7px; padding: 1px 4px; }
+  /* Hide inline chronicle, show FAB instead */
+  .chronicle-float { display: none; }
+  .chronicle-fab { display: inline-flex; }
+
+  /* Dashboard — stack into rows, hand becomes first row */
+  .dashboard {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .dash-identity {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: start;
+  }
+  .dash-resources {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 0;
+    margin: 0;
+    border: none;
+    border-top: 1px solid var(--ink-700);
+    padding-top: 10px;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: space-between;
+  }
+  .dash-res { min-width: 0; flex: 1 1 90px; }
+  .dash-actions {
+    grid-column: 1;
+    grid-row: 4;
+    border-top: 1px solid var(--ink-700);
+    padding-top: 10px;
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .dash-actions .btn, .shop-btn { flex: 1 1 30%; min-width: 0; padding: 10px 12px; font-size: 12px; }
+  .dash-actions .shop-btn .badge { padding: 1px 5px; font-size: 9px; }
+
+  .dash-avatar { width: 48px; height: 48px; font-size: 20px; }
+  .dash-name-block .name { font-size: 18px; }
+  .dash-res .ico { width: 30px; height: 30px; font-size: 14px; }
+  .dash-res .val { font-size: 18px; }
+
+  /* Hand becomes inline first row of dashboard, no longer overlaps stage */
+  .hand-float {
+    position: static;
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    max-width: none;
+    left: auto;
+    right: auto;
+    padding: 6px 0 10px;
+    margin: 0;
+    border-bottom: 1px solid var(--ink-700);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .hand-float .card { width: 124px; min-height: 156px; }
+
+  /* Modal */
+  .modal { padding: 20px 16px; max-height: 92vh; }
+  .modal h2 { font-size: 22px; }
+  .modal.shop-modal .shop-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* Lobby */
+  .lobby .row-actions .btn { min-width: 0; }
+
+  /* Rules */
+  .rules-page { padding: 24px 16px 60px; }
+  .rules-page .cards-grid { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .rules-page .victory-grid { grid-template-columns: 1fr; }
+  .rules-page .res-row { grid-template-columns: 1fr; }
+
+  /* End */
+  .endscreen .standings .row { grid-template-columns: 20px 24px 1fr auto; gap: 8px; font-size: 11px; }
+  .endscreen .standings .row > :nth-child(5),
+  .endscreen .standings .row > :nth-child(6) { display: none; }
+
+  /* Toast */
+  .toast { left: 16px; right: 16px; transform: none; text-align: center; }
+}
+
+/* Small mobile */
+@media (max-width: 420px) {
+  .modal.shop-modal .shop-grid { grid-template-columns: 1fr; }
+  .rules-page .cards-grid { grid-template-columns: 1fr; }
+  .menu h1 { font-size: 44px; }
+}

@@ -1,0 +1,132 @@
+/* End screen */
+.endscreen {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 24px;
+  text-align: center;
+}
+.endscreen .crown {
+  width: 80px; height: 80px;
+  border: 2px solid var(--gold-500);
+  border-radius: 50%;
+  display: grid; place-items: center;
+  margin-bottom: 24px;
+}
+.endscreen .crown::before {
+  content: ""; width: 40px; height: 40px; border-radius: 50%;
+  background: var(--gold-500);
+}
+.endscreen .victory-type {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--gold-400);
+}
+.endscreen h1 {
+  font-family: var(--font-display);
+  font-size: clamp(40px, 8vw, 72px);
+  margin: 12px 0 6px;
+  color: var(--parch-50); font-weight: 400;
+}
+.endscreen .who { color: var(--ink-200); font-size: 16px; margin-bottom: 32px; }
+.endscreen .standings {
+  display: grid; gap: 10px;
+  width: min(560px, 100%);
+  margin-bottom: 32px;
+}
+.endscreen .standings .row {
+  display: grid; grid-template-columns: 26px 24px 1fr auto auto auto; gap: 10px;
+  align-items: center;
+  padding: 12px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-700);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+.endscreen .standings .row.winner { border-color: var(--gold-500); background: rgba(201,165,90,0.06); }
+.endscreen .standings .rank { color: var(--ink-400); }
+.endscreen .standings .name { color: var(--parch-50); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.endscreen .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* Rules page */
+.rules-page {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 40px 24px 80px;
+}
+.rules-page h1 {
+  font-family: var(--font-display);
+  font-size: clamp(36px, 6vw, 52px);
+  margin: 0 0 8px;
+  color: var(--parch-50); font-weight: 400;
+}
+.rules-page .lead {
+  color: var(--ink-300);
+  font-size: 15px;
+  margin: 0 0 32px;
+  max-width: 640px;
+  line-height: 1.6;
+}
+.rules-page section { margin-bottom: 40px; }
+.rules-page section h2 {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 4vw, 28px);
+  margin: 0 0 14px;
+  color: var(--gold-400);
+  font-weight: 400;
+  border-bottom: 1px solid var(--ink-700);
+  padding-bottom: 8px;
+}
+.rules-page p, .rules-page li { color: var(--ink-200); font-size: 14px; line-height: 1.7; }
+.rules-page ul { padding-left: 18px; }
+.rules-page .victory-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+  margin-top: 12px;
+}
+.rules-page .vc {
+  padding: 18px;
+  border: 1px solid var(--ink-700);
+  border-radius: var(--radius);
+  background: rgba(0,0,0,0.2);
+  border-top: 3px solid var(--cat, var(--gold-500));
+}
+.rules-page .vc.mil { --cat: var(--mil-500); }
+.rules-page .vc.eco { --cat: var(--eco-500); }
+.rules-page .vc.sci { --cat: var(--sci-500); }
+.rules-page .vc h4 { font-family: var(--font-display); font-size: 22px; margin: 0 0 6px; color: var(--parch-50); font-weight: 400; }
+.rules-page .vc p { font-size: 13px; margin: 0; color: var(--ink-300); }
+.rules-page .cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;
+  margin-top: 14px;
+}
+.rules-page .cards-grid .card { min-height: 220px; }
+.rules-page .res-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;
+}
+.rules-page .res-tile {
+  padding: 18px;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--ink-700);
+  border-radius: var(--radius);
+}
+.rules-page .res-tile .icon { font-family: var(--font-display); font-size: 22px; color: var(--gold-400); }
+.rules-page .res-tile h4 { margin: 6px 0 4px; font-family: var(--font-display); font-size: 18px; color: var(--parch-50); font-weight: 400; }
+.rules-page .res-tile p { font-size: 13px; color: var(--ink-300); margin: 0; }
+.rules-page .back {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: var(--ink-300);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 8px 12px;
+  border: 1px solid var(--ink-700);
+  border-radius: var(--radius);
+}
+.rules-page .back:hover { color: var(--gold-400); border-color: var(--gold-400); }

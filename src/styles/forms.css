@@ -1,0 +1,89 @@
+/* Forms — panels, fields, token input */
+.panel {
+  background: rgba(17, 22, 31, 0.85);
+  border: 1px solid var(--ink-600);
+  border-radius: var(--radius-lg);
+  padding: 36px;
+  width: min(520px, 92vw);
+  position: relative;
+  z-index: 1;
+}
+.panel-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+}
+.panel h2 {
+  font-family: var(--font-display);
+  font-size: clamp(28px, 5vw, 36px);
+  margin: 0 0 6px;
+  color: var(--parch-50);
+  font-weight: 400;
+}
+.panel .lead {
+  color: var(--ink-300);
+  font-size: 14px;
+  margin: 0 0 28px;
+}
+.panel .back {
+  position: absolute;
+  top: 18px; left: 18px;
+  color: var(--ink-300);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 8px;
+}
+.panel .back:hover { color: var(--gold-400); }
+
+.token-input {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin: 14px 0 20px;
+}
+.token-input input {
+  text-align: center;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-600);
+  color: var(--parch-50);
+  font-family: var(--font-mono);
+  font-size: clamp(20px, 5vw, 30px);
+  text-transform: uppercase;
+  padding: 14px 0;
+  border-radius: var(--radius);
+  outline: none;
+  caret-color: var(--gold-400);
+  width: 100%;
+}
+.token-input input:focus { border-color: var(--gold-400); }
+
+.field { display: block; margin-bottom: 14px; }
+.field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+  margin-bottom: 6px;
+}
+.field input, .field select {
+  width: 100%;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-600);
+  color: var(--ink-100);
+  font-family: var(--font-body);
+  font-size: 16px;
+  padding: 12px 14px;
+  border-radius: var(--radius);
+  outline: none;
+  min-height: 44px;
+}
+.field input:focus, .field select:focus { border-color: var(--gold-400); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
