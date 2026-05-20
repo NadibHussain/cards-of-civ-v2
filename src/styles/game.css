@@ -498,16 +498,55 @@
 .modal.chronicle-modal .chronicle-list li.sci { color: var(--sci-400); }
 .modal.chronicle-modal .chronicle-list li.eco { color: var(--eco-400); }
 
-/* Attack announcement animation */
-@keyframes attack-anim-in {
-  from { opacity: 0; transform: scale(0.82) translateY(-12px); }
+/* ── Attack announcement animation ───────────────────────────── */
+
+@keyframes attack-overlay-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes attack-card-in {
+  from { opacity: 0; transform: scale(0.7) translateY(-24px); }
   to   { opacity: 1; transform: scale(1)   translateY(0); }
 }
-@keyframes attack-anim-out {
-  from { opacity: 1; }
-  to   { opacity: 0; }
+@keyframes glyph-pop {
+  0%   { transform: scale(0.4) rotate(-8deg); opacity: 0; }
+  60%  { transform: scale(1.25) rotate(4deg); opacity: 1; }
+  80%  { transform: scale(0.95) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); opacity: 1; }
 }
+@keyframes weapon-fly-in {
+  from { transform: translateX(-60px) scale(0.5); opacity: 0; }
+  60%  { transform: translateX(6px) scale(1.15); opacity: 1; }
+  to   { transform: translateX(0) scale(1); opacity: 1; }
+}
+@keyframes hit-shake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-7px) rotate(-1deg); }
+  40%     { transform: translateX(7px)  rotate(1deg); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(4px); }
+}
+@keyframes dmg-bounce {
+  0%   { transform: scale(0.6) translateY(10px); opacity: 0; }
+  65%  { transform: scale(1.2) translateY(-4px); opacity: 1; }
+  85%  { transform: scale(0.96); }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+@keyframes particle-burst {
+  0%   { transform: translate(0,0) scale(1); opacity: 0.9; }
+  100% { transform: translate(var(--px), var(--py)) scale(0); opacity: 0; }
+}
+
+/* Per-card overlay accent colours */
+.attack-anim-overlay.card-type-infantry  { --anim-accent: #cc6a55; --anim-glow: rgba(180,80,60,0.35); }
+.attack-anim-overlay.card-type-artillery { --anim-accent: #c98a3a; --anim-glow: rgba(200,130,50,0.35); }
+.attack-anim-overlay.card-type-spy       { --anim-accent: #9b72c9; --anim-glow: rgba(130,80,200,0.3); }
+.attack-anim-overlay.card-type-tank      { --anim-accent: #dcc183; --anim-glow: rgba(220,190,100,0.3); }
+.attack-anim-overlay.card-type-drone     { --anim-accent: #7ea0c9; --anim-glow: rgba(80,140,210,0.32); }
+
 .attack-anim-overlay {
+  --anim-accent: #cc6a55;
+  --anim-glow: rgba(180,80,60,0.3);
   position: fixed;
   inset: 0;
   z-index: 200;
@@ -515,71 +554,158 @@
   align-items: center;
   justify-content: center;
   pointer-events: all;
-  background: rgba(0,0,0,0.55);
-  backdrop-filter: blur(2px);
-  animation: attack-anim-in 0.28s cubic-bezier(.22,.68,0,1.4) both;
+  background: rgba(0,0,0,0.62);
+  backdrop-filter: blur(3px);
+  animation: attack-overlay-in 0.22s ease both;
 }
+
+/* Particle layer */
+.attack-anim-particles {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+.anim-particle {
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--anim-accent);
+  opacity: 0;
+  animation: particle-burst 0.7s ease-out both;
+}
+.anim-particle.p0 { --px: -90px;  --py: -70px;  animation-delay: 0.18s; }
+.anim-particle.p1 { --px:  90px;  --py: -60px;  animation-delay: 0.22s; }
+.anim-particle.p2 { --px: -110px; --py:  40px;  animation-delay: 0.20s; width:6px; height:6px; }
+.anim-particle.p3 { --px:  120px; --py:  55px;  animation-delay: 0.24s; width:6px; height:6px; }
+.anim-particle.p4 { --px: -50px;  --py: -110px; animation-delay: 0.19s; width:5px; height:5px; }
+.anim-particle.p5 { --px:  60px;  --py: -100px; animation-delay: 0.21s; width:5px; height:5px; }
+.anim-particle.p6 { --px: -130px; --py: -20px;  animation-delay: 0.23s; width:7px; height:7px; }
+.anim-particle.p7 { --px:  140px; --py: -10px;  animation-delay: 0.17s; width:7px; height:7px; }
+
+/* Main panel */
 .attack-anim-card {
+  position: relative;
   text-align: center;
-  padding: 36px 48px;
-  border-radius: 18px;
-  min-width: 320px;
-  max-width: 480px;
+  padding: 32px 48px 24px;
+  border-radius: 20px;
+  min-width: 340px;
+  max-width: 500px;
   background: var(--ink-800);
   border: 1.5px solid var(--ink-600);
-  box-shadow: 0 24px 64px rgba(0,0,0,0.7);
-  animation: attack-anim-in 0.3s cubic-bezier(.22,.68,0,1.4) both;
+  box-shadow: 0 28px 72px rgba(0,0,0,0.75);
+  animation: attack-card-in 0.32s cubic-bezier(.22,.68,0,1.4) both;
 }
 .attack-anim-card.hit {
-  border-color: var(--mil-500);
-  box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 40px rgba(180,80,60,0.25);
+  border-color: var(--anim-accent);
+  box-shadow: 0 28px 72px rgba(0,0,0,0.75), 0 0 48px var(--anim-glow);
+  animation: attack-card-in 0.32s cubic-bezier(.22,.68,0,1.4) both,
+             hit-shake 0.38s ease 0.38s both;
 }
 .attack-anim-card.miss {
   border-color: var(--ink-500);
 }
+
+/* Weapon icon row — flies in from left */
+.attack-anim-weapon-row {
+  margin-bottom: 6px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.attack-anim-weapon-icon {
+  font-size: 30px;
+  display: inline-block;
+  animation: weapon-fly-in 0.4s cubic-bezier(.22,.68,0,1.4) 0.1s both;
+  filter: drop-shadow(0 0 8px var(--anim-accent));
+}
+
+/* Large card glyph */
+.attack-anim-glyph {
+  font-family: var(--font-mono);
+  font-size: 52px;
+  color: var(--anim-accent);
+  line-height: 1;
+  margin-bottom: 10px;
+  display: inline-block;
+  animation: glyph-pop 0.5s cubic-bezier(.22,.68,0,1.4) 0.15s both;
+  text-shadow: 0 0 24px var(--anim-glow);
+}
+
+/* Hit/miss status badge */
 .attack-anim-label {
   font-family: var(--font-mono);
-  font-size: 13px;
-  letter-spacing: 0.25em;
+  font-size: 12px;
+  letter-spacing: 0.28em;
   text-transform: uppercase;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 30px;
+  display: inline-block;
 }
-.attack-anim-card.hit  .attack-anim-label { color: var(--mil-400); }
-.attack-anim-card.miss .attack-anim-label { color: var(--ink-400); }
+.attack-anim-card.hit  .attack-anim-label {
+  color: var(--anim-accent);
+  background: rgba(0,0,0,0.35);
+  border: 1px solid var(--anim-accent);
+}
+.attack-anim-card.miss .attack-anim-label {
+  color: var(--ink-400);
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--ink-600);
+}
+
+/* Player names row */
 .attack-anim-names {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  margin-bottom: 12px;
+  gap: 14px;
+  margin-bottom: 10px;
 }
 .attack-anim-names .attacker {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 24px;
   color: var(--gold-400);
 }
 .attack-anim-names .vs {
   font-family: var(--font-mono);
-  font-size: 18px;
-  color: var(--mil-400);
+  font-size: 16px;
+  color: var(--anim-accent);
 }
 .attack-anim-names .defender {
   font-family: var(--font-display);
-  font-size: 26px;
+  font-size: 24px;
   color: var(--parch-50);
 }
+
+/* Card name sub-label */
 .attack-anim-card-name {
   font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.2em;
+  font-size: 10px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--ink-300);
   margin-bottom: 14px;
 }
+
+/* Damage/steal amount */
 .attack-anim-dmg {
   font-family: var(--font-display);
-  font-size: 22px;
-  color: var(--mil-400);
-  margin-top: 4px;
+  font-size: 28px;
+  color: var(--anim-accent);
+  margin-top: 6px;
+  animation: dmg-bounce 0.45s cubic-bezier(.22,.68,0,1.4) 0.5s both;
+}
+
+/* Dismiss hint */
+.attack-anim-dismiss {
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-500);
+  margin-top: 18px;
 }

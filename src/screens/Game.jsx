@@ -36,6 +36,7 @@ function Game({ game, code, uid, loading, onLeave }) {
     const la = game?.lastAttack;
     if (!la || la.ts <= mountTimeRef.current) return;
     setAttackAnim(la);
+    if (la.cardId) window.playAttackSound?.(la.cardId);
     if (animTimerRef.current) clearTimeout(animTimerRef.current);
     animTimerRef.current = setTimeout(() => setAttackAnim(null), 3500);
     return () => clearTimeout(animTimerRef.current);
@@ -106,26 +107,53 @@ function Game({ game, code, uid, loading, onLeave }) {
     <div className={`board ${handOpen && handEntries.length > 0 ? "hand-open" : ""}`} data-screen-label="05 Game">
       {toast && <div className="toast">{toast}</div>}
 
-      {attackAnim && (
-        <div className="attack-anim-overlay" onClick={() => setAttackAnim(null)}>
-          <div className={`attack-anim-card ${attackAnim.hit ? "hit" : "miss"}`}>
-            <div className="attack-anim-label">{attackAnim.hit ? "⚔ STRIKE" : "✕ MISSED"}</div>
-            <div className="attack-anim-names">
-              <span className="attacker">{attackAnim.attackerName}</span>
-              <span className="vs">→</span>
-              <span className="defender">{attackAnim.targetName}</span>
+      {attackAnim && (() => {
+        const animCard = getCard(attackAnim.cardId);
+        const weaponIcon = {
+          infantry: "⚔",
+          artillery: "💣",
+          spy: "🕵",
+          tank: "💥",
+          drone: "🎯",
+        }[attackAnim.cardId] || "⚔";
+        return (
+          <div
+            className={`attack-anim-overlay card-type-${attackAnim.cardId || "infantry"}`}
+            onClick={() => setAttackAnim(null)}
+          >
+            <div className="attack-anim-particles">
+              {[...Array(8)].map((_, i) => (
+                <div key={i} className={`anim-particle p${i}`} />
+              ))}
             </div>
-            <div className="attack-anim-card-name">{attackAnim.cardName}</div>
-            {attackAnim.hit && (
-              <div className="attack-anim-dmg">
-                {attackAnim.stolen > 0
-                  ? `Stole ${attackAnim.stolen}M Gold`
-                  : `−${attackAnim.dmg}M Gold`}
+            <div className={`attack-anim-card ${attackAnim.hit ? "hit" : "miss"}`}>
+              <div className="attack-anim-weapon-row">
+                <span className="attack-anim-weapon-icon">{weaponIcon}</span>
               </div>
-            )}
+              {animCard && (
+                <div className="attack-anim-glyph">{animCard.glyph}</div>
+              )}
+              <div className="attack-anim-label">
+                {attackAnim.hit ? "⚔ STRIKE" : "✕ MISSED"}
+              </div>
+              <div className="attack-anim-names">
+                <span className="attacker">{attackAnim.attackerName}</span>
+                <span className="vs">→</span>
+                <span className="defender">{attackAnim.targetName}</span>
+              </div>
+              <div className="attack-anim-card-name">{attackAnim.cardName}</div>
+              {attackAnim.hit && (
+                <div className="attack-anim-dmg">
+                  {attackAnim.stolen > 0
+                    ? `Stole ${attackAnim.stolen}M Gold`
+                    : `−${attackAnim.dmg}M Gold`}
+                </div>
+              )}
+              <div className="attack-anim-dismiss">tap to dismiss</div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="topbar">
         <div className="game-id">

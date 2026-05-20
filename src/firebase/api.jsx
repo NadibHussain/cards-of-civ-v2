@@ -323,6 +323,7 @@
       attackerName: yourName,
       targetName: tgtName,
       cardName: card.name,
+      cardId: card.id,
       hit,
       dmg: hit ? dmg : 0,
       stolen: card.id === "spy" && hit ? stolen : 0,
