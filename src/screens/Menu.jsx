@@ -3,8 +3,6 @@ function Menu({ goto }) {
   return (
     <div className="menu" data-screen-label="01 Menu">
       <div className="crest-row">
-        <span>EST · MMXXVI</span>
-        <span>·</span>
         <span>3–8 PLAYERS</span>
         <span>·</span>
         <span>TURN BASED</span>
@@ -18,7 +16,7 @@ function Menu({ goto }) {
       </div>
       <div className="footer">
         <span><a style={{color: "inherit", cursor: "pointer"}} onClick={() => goto("rules")}>How to Play</a></span>
-        <span>v0.1 · Prototype</span>
+        <span>v0.2 · Prototype</span>
       </div>
     </div>
   );

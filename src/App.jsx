@@ -31,9 +31,11 @@ function App() {
 
   const { DevNav, Menu, Create, Join, Lobby, Game, End, Rules } = window;
 
+  const isBoard = screen === "game";
+
   return (
-    <div className="app">
-      <DevNav screen={screen} goto={goto} />
+    <div className={`app${isBoard ? " no-nav" : ""}`}>
+      {!isBoard && <DevNav screen={screen} goto={goto} />}
       <main className="stage">
         {!uid && (
           <div style={{position:"absolute",top:10,right:10,fontFamily:"var(--font-mono)",fontSize:10,color:"var(--ink-400)",letterSpacing:"0.1em"}}>

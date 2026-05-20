@@ -497,3 +497,89 @@
 .modal.chronicle-modal .chronicle-list li.war { color: var(--mil-400); }
 .modal.chronicle-modal .chronicle-list li.sci { color: var(--sci-400); }
 .modal.chronicle-modal .chronicle-list li.eco { color: var(--eco-400); }
+
+/* Attack announcement animation */
+@keyframes attack-anim-in {
+  from { opacity: 0; transform: scale(0.82) translateY(-12px); }
+  to   { opacity: 1; transform: scale(1)   translateY(0); }
+}
+@keyframes attack-anim-out {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.attack-anim-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: all;
+  background: rgba(0,0,0,0.55);
+  backdrop-filter: blur(2px);
+  animation: attack-anim-in 0.28s cubic-bezier(.22,.68,0,1.4) both;
+}
+.attack-anim-card {
+  text-align: center;
+  padding: 36px 48px;
+  border-radius: 18px;
+  min-width: 320px;
+  max-width: 480px;
+  background: var(--ink-800);
+  border: 1.5px solid var(--ink-600);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7);
+  animation: attack-anim-in 0.3s cubic-bezier(.22,.68,0,1.4) both;
+}
+.attack-anim-card.hit {
+  border-color: var(--mil-500);
+  box-shadow: 0 24px 64px rgba(0,0,0,0.7), 0 0 40px rgba(180,80,60,0.25);
+}
+.attack-anim-card.miss {
+  border-color: var(--ink-500);
+}
+.attack-anim-label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+.attack-anim-card.hit  .attack-anim-label { color: var(--mil-400); }
+.attack-anim-card.miss .attack-anim-label { color: var(--ink-400); }
+.attack-anim-names {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+.attack-anim-names .attacker {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--gold-400);
+}
+.attack-anim-names .vs {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  color: var(--mil-400);
+}
+.attack-anim-names .defender {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--parch-50);
+}
+.attack-anim-card-name {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+  margin-bottom: 14px;
+}
+.attack-anim-dmg {
+  font-family: var(--font-display);
+  font-size: 22px;
+  color: var(--mil-400);
+  margin-top: 4px;
+}
