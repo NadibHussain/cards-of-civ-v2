@@ -12,6 +12,9 @@ function Game({ game, code, uid, loading, onLeave }) {
   const [handOpen, setHandOpen] = React.useState(true);
   const [chronicleOpen, setChronicleOpen] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
+  const [attackAnim, setAttackAnim] = React.useState(null);
+  const mountTimeRef = React.useRef(Date.now());
+  const animTimerRef = React.useRef(null);
 
   const meta = game?.meta || {};
   const playersObj = game?.players || {};
@@ -27,6 +30,16 @@ function Game({ game, code, uid, loading, onLeave }) {
   const remaining = window.useTurnTimer(meta.turnDeadline);
 
   function showToast(t) { setToast(t); setTimeout(() => setToast(""), 1800); }
+
+  // Show attack animation to all players when a new attack lands
+  React.useEffect(() => {
+    const la = game?.lastAttack;
+    if (!la || la.ts <= mountTimeRef.current) return;
+    setAttackAnim(la);
+    if (animTimerRef.current) clearTimeout(animTimerRef.current);
+    animTimerRef.current = setTimeout(() => setAttackAnim(null), 3500);
+    return () => clearTimeout(animTimerRef.current);
+  }, [game?.lastAttack?.ts]);
 
   // Auto-advance turn if expired (any client can trigger; transaction-safe)
   React.useEffect(() => {
@@ -92,6 +105,27 @@ function Game({ game, code, uid, loading, onLeave }) {
   return (
     <div className={`board ${handOpen && handEntries.length > 0 ? "hand-open" : ""}`} data-screen-label="05 Game">
       {toast && <div className="toast">{toast}</div>}
+
+      {attackAnim && (
+        <div className="attack-anim-overlay" onClick={() => setAttackAnim(null)}>
+          <div className={`attack-anim-card ${attackAnim.hit ? "hit" : "miss"}`}>
+            <div className="attack-anim-label">{attackAnim.hit ? "⚔ STRIKE" : "✕ MISSED"}</div>
+            <div className="attack-anim-names">
+              <span className="attacker">{attackAnim.attackerName}</span>
+              <span className="vs">→</span>
+              <span className="defender">{attackAnim.targetName}</span>
+            </div>
+            <div className="attack-anim-card-name">{attackAnim.cardName}</div>
+            {attackAnim.hit && (
+              <div className="attack-anim-dmg">
+                {attackAnim.stolen > 0
+                  ? `Stole ${attackAnim.stolen}M Gold`
+                  : `−${attackAnim.dmg}M Gold`}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       <div className="topbar">
         <div className="game-id">

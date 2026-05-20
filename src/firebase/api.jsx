@@ -317,7 +317,17 @@
       text = hit ? `${yourName} struck ${tgtName} with ${card.name} — ${dmg}M lost.`
                  : `${yourName}'s ${card.name} missed ${tgtName}.`;
     }
-    await gref(code, "log").push({ year: game.meta.year, text, kind: "war", ts: Date.now() });
+    const ts = Date.now();
+    await gref(code, "log").push({ year: game.meta.year, text, kind: "war", ts });
+    await gref(code, "lastAttack").set({
+      attackerName: yourName,
+      targetName: tgtName,
+      cardName: card.name,
+      hit,
+      dmg: hit ? dmg : 0,
+      stolen: card.id === "spy" && hit ? stolen : 0,
+      ts,
+    });
   }
 
   // Compute and apply persistent effects when a new year starts.

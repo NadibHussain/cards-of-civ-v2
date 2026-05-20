@@ -1,11 +1,7 @@
 // DevNav — left sidebar to jump between screens; collapses on mobile
 const NAV = [
-  { id: "menu",   label: "Main Menu",      group: "ENTRY" },
   { id: "create", label: "Create Game",    group: "ENTRY" },
   { id: "join",   label: "Join Game",      group: "ENTRY" },
-  { id: "lobby",  label: "Lobby",          group: "ENTRY" },
-  { id: "game",   label: "Game Board",     group: "PLAY" },
-  { id: "end",    label: "Victory Screen", group: "PLAY" },
   { id: "rules",  label: "Rules Sheet",    group: "REFERENCE" },
 ];
 
@@ -29,7 +25,7 @@ function DevNav({ screen, goto }) {
         <button className="devnav-close" onClick={() => setOpen(false)} aria-label="Close">✕</button>
         <div className="brand">
           Cards of<br />Civilization
-          <small>PROTOTYPE · v0.1</small>
+          <small>PROTOTYPE · v0.2</small>
         </div>
         {Object.entries(groups).map(([group, items]) => (
           <React.Fragment key={group}>
