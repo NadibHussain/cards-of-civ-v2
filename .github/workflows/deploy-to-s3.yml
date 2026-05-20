@@ -1,0 +1,41 @@
+name: Deploy to S3
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type "deploy" to confirm'
+        required: true
+        default: ''
+
+jobs:
+  deploy:
+    name: Sync repo to S3
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'deploy' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-2
+
+      - name: Sync to S3
+        run: |
+          aws s3 sync . s3://cards-of-civilization/ \
+            --delete \
+            --exclude ".git/*" \
+            --exclude ".github/*"
+
+      - name: Summary
+        run: |
+          echo "### Deployed to S3" >> $GITHUB_STEP_SUMMARY
+          echo "**Bucket:** cards-of-civilization" >> $GITHUB_STEP_SUMMARY
+          echo "**Region:** us-east-2" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
