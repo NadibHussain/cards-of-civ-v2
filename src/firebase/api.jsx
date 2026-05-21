@@ -20,8 +20,11 @@
   }
 
   async function _uid() {
-    await window.fb.ready;
-    return window.fb.auth.currentUser.uid;
+    // Use the user resolved by the ready promise rather than re-reading currentUser,
+    // which can be null in restricted WebViews (e.g. Facebook in-app browser) due to
+    // auth persistence being blocked by storage/cookie restrictions.
+    const u = await window.fb.ready;
+    return u.uid;
   }
 
   async function createGame({ hostName, maxPlayers = 8, rounds = TOTAL_ROUNDS_DEFAULT }) {
