@@ -15,6 +15,9 @@ function End({ game, code, uid, onLeave }) {
     <div className="endscreen" data-screen-label="06 End">
       <div className="victory-type">{meta.victoryType || "Victory"}</div>
       <div className="crown"></div>
+      {winner?.flag && (
+        <div style={{fontSize:72,lineHeight:1,marginBottom:8}}>{winner.flag}</div>
+      )}
       <h1>{winner?.name} wins</h1>
       <div className="who">{winner?.nation} · Game {code}</div>
 
@@ -22,8 +25,8 @@ function End({ game, code, uid, onLeave }) {
         {players.map((p, i) => (
           <div key={p.uid} className={`row ${p.uid === meta.winnerId?"winner":""}`}>
             <span className="rank">#{i+1}</span>
-            <Avatar name={p.name} color={p.color} size={24} />
-            <span className="name">{p.name} <span style={{color:"var(--ink-400)"}}>· {p.nation}</span></span>
+            <Avatar name={p.name} color={p.color} flag={p.flag || undefined} size={24} />
+            <span className="name">{p.name} <span style={{color:"var(--ink-400)"}}>· {p.flag} {p.nation}</span></span>
             <span>{p.gold || 0}M</span>
             <span style={{color:"var(--sci-400)"}}>{p.sci || 0}SP</span>
             <span style={{color:"var(--mil-400)"}}>{p.mvp || 0}VP</span>

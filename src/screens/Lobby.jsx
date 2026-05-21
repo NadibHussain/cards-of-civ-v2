@@ -4,6 +4,7 @@ function Lobby({ game, code, uid, loading, onLeave }) {
   const [copied, setCopied] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [err, setErr] = React.useState("");
+  const [countryErr, setCountryErr] = React.useState("");
 
   if (loading || !game) {
     return (
@@ -23,14 +24,25 @@ function Lobby({ game, code, uid, loading, onLeave }) {
   const isHost = meta.hostUid === uid;
   const slots = meta.maxPlayers || 8;
 
+  const takenCountries = players.filter(p => p.uid !== uid && p.nation).map(p => p.nation);
+  const countries = window.COUNTRIES || [];
+
   function copyToken() {
     if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 1400);
   }
 
+  async function pickCountry(countryName) {
+    if (you?.ready) return;
+    setCountryErr("");
+    try { await window.api.selectCountry(code, countryName); }
+    catch (e) { setCountryErr(e.message); }
+  }
+
   async function toggleReady() {
     if (!you) return;
+    if (!you.nation && !you.ready) { setCountryErr("Pick a country first."); return; }
     try { await window.api.setReady(code, !you.ready); }
     catch (e) { setErr(e.message); }
   }
@@ -47,7 +59,7 @@ function Lobby({ game, code, uid, loading, onLeave }) {
     onLeave();
   }
 
-  const canStart = isHost && players.length >= 3 && players.every(p => p.ready);
+  const canStart = isHost && players.length >= 3 && players.every(p => p.ready) && players.every(p => p.nation);
 
   return (
     <div className="panel-wrap lobby" data-screen-label="04 Lobby">
@@ -66,7 +78,7 @@ function Lobby({ game, code, uid, loading, onLeave }) {
         <div className="players-list">
           {players.map((p) => (
             <div className="player-row" key={p.uid}>
-              <Avatar name={p.name} color={p.color} />
+              <Avatar name={p.name} color={p.color} flag={p.flag || undefined} />
               <div className="meta">
                 <span className="name">
                   {p.name}
@@ -74,7 +86,11 @@ function Lobby({ game, code, uid, loading, onLeave }) {
                   {p.host && <span style={{color:"var(--gold-400)",marginLeft:8,fontSize:11,fontFamily:"var(--font-mono)"}}>HOST</span>}
                   {!p.online && <span style={{color:"var(--mil-400)",marginLeft:8,fontSize:11,fontFamily:"var(--font-mono)"}}>offline</span>}
                 </span>
-                <span className="sub">{p.nation}</span>
+                <span className="sub">
+                  {p.nation
+                    ? <>{p.flag} {p.nation}</>
+                    : <span style={{color:"var(--ink-500)"}}>No country selected</span>}
+                </span>
               </div>
               <span className={`status ${p.ready ? "ready" : ""}`}>{p.ready ? "● Ready" : "○ Picking…"}</span>
             </div>
@@ -94,6 +110,35 @@ function Lobby({ game, code, uid, loading, onLeave }) {
             </div>
           )}
         </div>
+
+        {!you?.ready && (
+          <div className="country-picker">
+            <div className="cp-label">
+              {you?.nation
+                ? <>Your country: <strong>{you.flag} {you.nation}</strong> — change or click Ready</>
+                : "Pick your country"}
+            </div>
+            {countryErr && <div className="cp-error">{countryErr}</div>}
+            <div className="cp-grid">
+              {countries.map((c) => {
+                const taken = takenCountries.includes(c.name);
+                const selected = you?.nation === c.name;
+                return (
+                  <button
+                    key={c.name}
+                    className={`cp-btn${selected ? " selected" : ""}${taken ? " taken" : ""}`}
+                    disabled={taken}
+                    onClick={() => pickCountry(c.name)}
+                    title={c.name}
+                  >
+                    <span className="cp-flag">{c.flag}</span>
+                    <span className="cp-name">{c.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {err && <div style={{marginBottom:12,padding:"10px 12px",background:"var(--mil-bg)",border:"1px solid var(--mil-500)",color:"var(--mil-400)",borderRadius:"var(--radius)",fontSize:13}}>{err}</div>}
 

@@ -2,18 +2,9 @@
 // Each fn assumes window.fb is initialized and user is signed in.
 
 (function () {
-  const NATION_POOL = ["Aurelia","Khemet","Veridia","Storvik","Hanjeon","Tlaloc","Sahel","Pyrrhus"];
-  const COLOR_POOL  = ["#dcc183","#cc6a55","#8aae78","#7ea0c9","#b89f72","#c98ad6","#5ec0c0","#d6b35e"];
-
   const TURN_SECONDS = 75;
   const STARTING_GOLD = 7;
   const TOTAL_ROUNDS_DEFAULT = 20;
-
-  function pickFrom(pool, used) {
-    const available = pool.filter(x => !used.includes(x));
-    if (available.length) return available[Math.floor(Math.random()*available.length)];
-    return pool[Math.floor(Math.random()*pool.length)];
-  }
 
   function gref(code, sub) {
     return window.fb.db.ref(`games/${code}${sub ? "/" + sub : ""}`);
@@ -54,14 +45,15 @@
     await gref(code, `players/${uid}`).set({
       uid,
       name: hostName,
-      nation: pickFrom(NATION_POOL, []),
-      color: pickFrom(COLOR_POOL, []),
+      nation: "",
+      flag: "",
+      color: "#555566",
       gold: STARTING_GOLD,
       sci: 0,
       mvp: 0,
       atWar: {},
       host: true,
-      ready: true,
+      ready: false,
       online: true,
       lastSeen: window.fb.sv.TIMESTAMP,
       order: 0,
@@ -98,8 +90,9 @@
     await gref(code, `players/${uid}`).set({
       uid,
       name,
-      nation: pickFrom(NATION_POOL, used.map(p => p.nation)),
-      color: pickFrom(COLOR_POOL, used.map(p => p.color)),
+      nation: "",
+      flag: "",
+      color: "#555566",
       gold: STARTING_GOLD,
       sci: 0,
       mvp: 0,
@@ -151,6 +144,7 @@
     const playersSnap = await gref(code, "players").once("value");
     const players = Object.values(playersSnap.val() || {});
     if (players.length < 3) throw new Error("Need at least 3 players.");
+    if (players.some(p => !p.nation)) throw new Error("All players must pick a country.");
     if (players.some(p => !p.ready)) throw new Error("All players must be ready.");
 
     await gref(code).update({
@@ -480,9 +474,26 @@
     }
   }
 
+  async function selectCountry(code, countryName) {
+    const uid = await _uid();
+    const country = (window.COUNTRIES || []).find(c => c.name === countryName);
+    if (!country) throw new Error("Unknown country.");
+
+    const playersSnap = await gref(code, "players").once("value");
+    const players = playersSnap.val() || {};
+    const takenBy = Object.values(players).find(p => p.nation === countryName && p.uid !== uid);
+    if (takenBy) throw new Error(`${countryName} is already taken.`);
+
+    await gref(code, `players/${uid}`).update({
+      nation: country.name,
+      flag: country.flag,
+      color: country.color,
+    });
+  }
+
   // Expose
   window.api = {
-    createGame, joinGame, leaveGame, setReady, startGame,
+    createGame, joinGame, leaveGame, setReady, selectCountry, startGame,
     buyCard, playEconScience, attackPlayer, endTurn,
     TURN_SECONDS,
   };

@@ -66,3 +66,66 @@
 
 .lobby .row-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .lobby .row-actions .btn { flex: 1; min-width: 140px; }
+
+/* Country Picker */
+.country-picker {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-700);
+  border-radius: var(--radius);
+}
+.country-picker .cp-label {
+  font-size: 12px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-300);
+  margin-bottom: 12px;
+}
+.country-picker .cp-label strong { color: var(--gold-300); font-family: inherit; }
+.country-picker .cp-error {
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--mil-400);
+}
+.country-picker .cp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 6px;
+}
+.cp-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 6px;
+  background: var(--ink-700);
+  border: 1px solid var(--ink-600);
+  border-radius: calc(var(--radius) - 2px);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  color: var(--ink-200);
+}
+.cp-btn:hover:not(:disabled) {
+  background: var(--ink-600);
+  border-color: var(--gold-500);
+}
+.cp-btn.selected {
+  background: rgba(201,165,90,0.12);
+  border-color: var(--gold-400);
+  color: var(--gold-300);
+}
+.cp-btn.taken {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.cp-btn .cp-flag { font-size: 22px; line-height: 1; }
+.cp-btn .cp-name {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: inherit;
+  text-transform: uppercase;
+}
