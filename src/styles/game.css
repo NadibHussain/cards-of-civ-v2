@@ -139,7 +139,7 @@
 }
 .opp-card .stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 4px;
   border-top: 1px solid var(--ink-700);
   border-bottom: 1px solid var(--ink-700);
@@ -162,6 +162,7 @@
 .opp-card .stat.gold .val { color: var(--gold-400); }
 .opp-card .stat.sci  .val { color: var(--sci-400); }
 .opp-card .stat.vp   .val { color: var(--mil-400); }
+.opp-card .stat.food .val { color: var(--eco-400); }
 .opp-card .opp-foot { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .opp-card .badges { display: flex; gap: 6px; flex-wrap: wrap; }
 .opp-card .badge {
@@ -295,6 +296,7 @@
 }
 .dash-res.gold .ico { background: var(--gold-400); }
 .dash-res.sci  .ico { background: var(--sci-400); }
+.dash-res.food .ico { background: var(--eco-400); }
 .dash-res.vic  .ico { background: var(--mil-400); }
 .dash-res .lbl {
   font-family: var(--font-mono);

@@ -42,22 +42,29 @@ window.CARDS = [
     id: "factory", cat: "economy", name: "Factory",
     cost: { gold: 3 }, chance: null,
     art: "INDUSTRY", glyph: "▥", artLabel: "Factory facade",
-    effect: <>+1 Gold every year. <span className="hi">+2 Gold</span> if you are not at war this year.</>,
-    summary: "+1M / year, +2M in peace"
+    effect: <>Requires <span className="hi">3 Farm cards</span> already played. Produces <span className="hi">+4 Food</span> every year.</>,
+    summary: "Req. 3 Farms · +4 Food / year"
   },
   {
     id: "bank", cat: "economy", name: "Bank",
-    cost: { gold: 3 }, chance: null,
+    cost: { gold: 5 }, chance: null,
     art: "VAULT", glyph: "◧", artLabel: "Bank vault",
-    effect: <>Loan 5–10 Gold to other players. In peace you earn <span className="hi">10% return</span>. If the debtor falls, the loan is lost.</>,
-    summary: "Lend 5–10M, 10% return"
+    effect: <>Requires <span className="hi">10 Gold</span> balance to buy (costs 5). Play to give 5 Gold to another player — they must not attack for <span className="hi">5 years</span>. If they keep the pact you earn <span className="hi">+5 Gold</span>; if they attack, you lose <span className="hi">3 Gold</span>.</>,
+    summary: "Req. 10G bal · Pact: give 5G → earn 5G or lose 3G"
   },
   {
-    id: "agriculture", cat: "economy", name: "Agriculture",
-    cost: { gold: 1 }, chance: null,
+    id: "agriculture", cat: "economy", name: "Farm",
+    cost: { gold: 2 }, chance: null,
     art: "FIELDS", glyph: "◇", artLabel: "Farm fields",
-    effect: <>+0.5 Gold every year, forever. Cheap, slow, dependable.</>,
-    summary: "+0.5M / year"
+    effect: <><span className="hi">+1 Food</span> every year, forever. Three Farms unlock the Factory.</>,
+    summary: "+1 Food / year"
+  },
+  {
+    id: "market", cat: "economy", name: "Market",
+    cost: { gold: 2 }, chance: null,
+    art: "BAZAAR", glyph: "⊕", artLabel: "Market bazaar",
+    effect: <><span className="hi">+2 Gold</span> every year, forever.</>,
+    summary: "+2G / year"
   },
 
   // Science
