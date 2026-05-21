@@ -29,7 +29,7 @@ function Create({ onCreated, goBack }) {
 
         <div className="field">
           <label>Your display name</label>
-          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Aurelia" maxLength={20} />
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Mira" maxLength={20} />
         </div>
         <div className="field-row">
           <div className="field">

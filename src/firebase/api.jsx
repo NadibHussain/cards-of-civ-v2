@@ -2,8 +2,7 @@
 // Each fn assumes window.fb is initialized and user is signed in.
 
 (function () {
-  const NATION_POOL = ["Aurelia","Khemet","Veridia","Storvik","Hanjeon","Tlaloc","Sahel","Pyrrhus"];
-  const COLOR_POOL  = ["#dcc183","#cc6a55","#8aae78","#7ea0c9","#b89f72","#c98ad6","#5ec0c0","#d6b35e"];
+  const COLOR_POOL = ["#dcc183","#cc6a55","#8aae78","#7ea0c9","#b89f72","#c98ad6","#5ec0c0","#d6b35e"];
 
   const TURN_SECONDS = 75;
   const STARTING_GOLD = 7;
@@ -54,7 +53,7 @@
     await gref(code, `players/${uid}`).set({
       uid,
       name: hostName,
-      nation: pickFrom(NATION_POOL, []),
+      country: null,
       color: pickFrom(COLOR_POOL, []),
       gold: STARTING_GOLD,
       sci: 0,
@@ -98,7 +97,7 @@
     await gref(code, `players/${uid}`).set({
       uid,
       name,
-      nation: pickFrom(NATION_POOL, used.map(p => p.nation)),
+      country: null,
       color: pickFrom(COLOR_POOL, used.map(p => p.color)),
       gold: STARTING_GOLD,
       sci: 0,
@@ -127,6 +126,11 @@
         lastSeenRef.set(window.fb.sv.TIMESTAMP);
       }
     });
+  }
+
+  async function setCountry(code, country) {
+    const uid = await _uid();
+    await gref(code, `players/${uid}/country`).set(country);
   }
 
   async function setReady(code, ready) {
@@ -482,7 +486,7 @@
 
   // Expose
   window.api = {
-    createGame, joinGame, leaveGame, setReady, startGame,
+    createGame, joinGame, leaveGame, setReady, setCountry, startGame,
     buyCard, playEconScience, attackPlayer, endTurn,
     TURN_SECONDS,
   };

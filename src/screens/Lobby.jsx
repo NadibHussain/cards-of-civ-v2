@@ -1,4 +1,4 @@
-// Lobby — live waiting room from Firebase
+// Lobby — live waiting room with country selection
 function Lobby({ game, code, uid, loading, onLeave }) {
   const Avatar = window.Avatar;
   const [copied, setCopied] = React.useState(false);
@@ -23,14 +23,27 @@ function Lobby({ game, code, uid, loading, onLeave }) {
   const isHost = meta.hostUid === uid;
   const slots = meta.maxPlayers || 8;
 
+  const takenCountries = players.filter(p => p.uid !== uid).map(p => p.country).filter(Boolean);
+
   function copyToken() {
     if (navigator.clipboard?.writeText) navigator.clipboard.writeText(code);
     setCopied(true);
     setTimeout(() => setCopied(false), 1400);
   }
 
+  async function pickCountry(countryName) {
+    setErr("");
+    try { await window.api.setCountry(code, countryName); }
+    catch (e) { setErr(e.message); }
+  }
+
   async function toggleReady() {
     if (!you) return;
+    if (!you.ready && !you.country) {
+      setErr("Pick a country before readying up!");
+      return;
+    }
+    setErr("");
     try { await window.api.setReady(code, !you.ready); }
     catch (e) { setErr(e.message); }
   }
@@ -66,7 +79,7 @@ function Lobby({ game, code, uid, loading, onLeave }) {
         <div className="players-list">
           {players.map((p) => (
             <div className="player-row" key={p.uid}>
-              <Avatar name={p.name} color={p.color} />
+              <Avatar name={p.name} color={p.color} country={p.country} />
               <div className="meta">
                 <span className="name">
                   {p.name}
@@ -74,9 +87,15 @@ function Lobby({ game, code, uid, loading, onLeave }) {
                   {p.host && <span style={{color:"var(--gold-400)",marginLeft:8,fontSize:11,fontFamily:"var(--font-mono)"}}>HOST</span>}
                   {!p.online && <span style={{color:"var(--mil-400)",marginLeft:8,fontSize:11,fontFamily:"var(--font-mono)"}}>offline</span>}
                 </span>
-                <span className="sub">{p.nation}</span>
+                <span className="sub">
+                  {p.country
+                    ? <>{window.getCountryFlag(p.country)} {p.country}</>
+                    : <span style={{color:"var(--ink-500)"}}>no country yet</span>}
+                </span>
               </div>
-              <span className={`status ${p.ready ? "ready" : ""}`}>{p.ready ? "● Ready" : "○ Picking…"}</span>
+              <span className={`status ${p.ready ? "ready" : ""}`}>
+                {p.ready ? "● Ready" : p.country ? "○ Waiting…" : "○ Picking…"}
+              </span>
             </div>
           ))}
           {Array.from({length: Math.max(0, 3 - players.length)}).map((_,i) => (
@@ -93,6 +112,27 @@ function Lobby({ game, code, uid, loading, onLeave }) {
               <span className="status">○</span>
             </div>
           )}
+        </div>
+
+        <div className="country-picker">
+          <div className="picker-label">Choose your country</div>
+          <div className="country-grid">
+            {window.COUNTRIES.map(c => {
+              const isTaken = takenCountries.includes(c.name);
+              const isSelected = you?.country === c.name;
+              return (
+                <button
+                  key={c.name}
+                  className={`country-btn${isSelected ? " selected" : ""}${isTaken ? " taken" : ""}`}
+                  disabled={isTaken}
+                  onClick={() => !isTaken && pickCountry(c.name)}
+                  title={c.name}>
+                  <span className="flag">{c.flag}</span>
+                  <span className="cname">{c.name}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
         {err && <div style={{marginBottom:12,padding:"10px 12px",background:"var(--mil-bg)",border:"1px solid var(--mil-500)",color:"var(--mil-400)",borderRadius:"var(--radius)",fontSize:13}}>{err}</div>}

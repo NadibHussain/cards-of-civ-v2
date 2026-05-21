@@ -16,14 +16,14 @@ function End({ game, code, uid, onLeave }) {
       <div className="victory-type">{meta.victoryType || "Victory"}</div>
       <div className="crown"></div>
       <h1>{winner?.name} wins</h1>
-      <div className="who">{winner?.nation} · Game {code}</div>
+      <div className="who">{winner?.country || "Unknown"} · Game {code}</div>
 
       <div className="standings">
         {players.map((p, i) => (
           <div key={p.uid} className={`row ${p.uid === meta.winnerId?"winner":""}`}>
             <span className="rank">#{i+1}</span>
-            <Avatar name={p.name} color={p.color} size={24} />
-            <span className="name">{p.name} <span style={{color:"var(--ink-400)"}}>· {p.nation}</span></span>
+            <Avatar name={p.name} color={p.color} country={p.country} size={24} />
+            <span className="name">{p.name} <span style={{color:"var(--ink-400)"}}>· {p.country || "—"}</span></span>
             <span>{p.gold || 0}M</span>
             <span style={{color:"var(--sci-400)"}}>{p.sci || 0}SP</span>
             <span style={{color:"var(--mil-400)"}}>{p.mvp || 0}VP</span>

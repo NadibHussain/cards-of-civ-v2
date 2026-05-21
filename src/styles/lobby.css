@@ -66,3 +66,56 @@
 
 .lobby .row-actions { display: flex; gap: 10px; flex-wrap: wrap; }
 .lobby .row-actions .btn { flex: 1; min-width: 140px; }
+
+/* Country picker */
+.country-picker { margin-bottom: 22px; }
+.country-picker .picker-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+  margin-bottom: 10px;
+}
+.country-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.country-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px;
+  background: var(--ink-800);
+  border: 1px solid var(--ink-600);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.country-btn:hover:not(.taken) {
+  border-color: var(--gold-500);
+  background: var(--ink-700);
+}
+.country-btn.selected {
+  border-color: var(--gold-400);
+  background: rgba(201,165,90,0.12);
+}
+.country-btn.taken {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+.country-btn .flag { font-size: 22px; line-height: 1; }
+.country-btn .cname {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 0.04em;
+  color: var(--ink-300);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.country-btn.selected .cname { color: var(--gold-400); }

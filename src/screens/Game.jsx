@@ -193,10 +193,10 @@ function Game({ game, code, uid, loading, onLeave }) {
             return (
               <div key={p.uid} className={`opp-card ${meta.turnIdx===realIdx?"active-turn":""} ${atWarWithYou?"at-war":""}`}>
                 <div className="opp-head">
-                  <Avatar name={p.name} color={p.color} size={32} />
+                  <Avatar name={p.name} color={p.color} country={p.country} size={32} />
                   <div>
                     <div className="name">{p.name}{!p.online && <span style={{color:"var(--mil-400)",marginLeft:6,fontSize:9}}>● offline</span>}</div>
-                    <div className="nation">{p.nation}</div>
+                    <div className="nation">{p.country || "—"}</div>
                   </div>
                   {meta.turnIdx===realIdx && <span className="turn-pip">TURN</span>}
                 </div>
@@ -280,13 +280,16 @@ function Game({ game, code, uid, loading, onLeave }) {
         )}
 
         <div className="dash-identity">
-          <div className="dash-avatar" style={{background: you?.color || "#dcc183"}}>
-            {(you?.name || "?")[0].toUpperCase()}
+          <div className="dash-avatar" style={{
+            background: you?.country ? "var(--ink-700)" : (you?.color || "#dcc183"),
+            fontSize: you?.country ? "32px" : "24px",
+          }}>
+            {you?.country ? window.getCountryFlag(you.country) : (you?.name || "?")[0].toUpperCase()}
           </div>
           <div className="dash-name-block">
             <span className="you-label">YOU · {you?.host ? "HOST" : "PLAYER"}</span>
             <span className="name">{you?.name}</span>
-            <span className="nation">{you?.nation} · {Object.keys(you?.atWar || {}).length === 0
+            <span className="nation">{you?.country || "—"} · {Object.keys(you?.atWar || {}).length === 0
               ? <span style={{color:"var(--eco-400)"}}>at peace</span>
               : <span style={{color:"var(--mil-400)"}}>at war ({Object.keys(you.atWar).length})</span>}</span>
           </div>
@@ -371,10 +374,10 @@ function Game({ game, code, uid, loading, onLeave }) {
                 <div key={p.uid}
                   className={`target ${target===p.uid?"selected":""}`}
                   onClick={() => setTarget(p.uid)}>
-                  <Avatar name={p.name} color={p.color} size={28} />
+                  <Avatar name={p.name} color={p.color} country={p.country} size={28} />
                   <div>
                     <div style={{color:"var(--parch-50)",fontSize:13}}>{p.name}</div>
-                    <div style={{color:"var(--ink-400)",fontSize:11,fontFamily:"var(--font-mono)"}}>{p.nation} · {p.gold}M</div>
+                    <div style={{color:"var(--ink-400)",fontSize:11,fontFamily:"var(--font-mono)"}}>{p.country || "—"} · {p.gold}M</div>
                   </div>
                   <span style={{fontFamily:"var(--font-mono)",fontSize:10,color:"var(--ink-300)",letterSpacing:"0.1em"}}>
                     {you?.atWar && you.atWar[p.uid] ? "AT WAR" : "PEACE"}
