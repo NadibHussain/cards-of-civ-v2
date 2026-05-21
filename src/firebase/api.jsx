@@ -4,6 +4,7 @@
 (function () {
   const TURN_SECONDS = 75;
   const STARTING_GOLD = 7;
+  const STARTING_FOOD = 3;
   const TOTAL_ROUNDS_DEFAULT = 20;
   const MAX_HAND_SIZE = 7;
 
@@ -52,7 +53,7 @@
       gold: STARTING_GOLD,
       sci: 0,
       mvp: 0,
-      food: 0,
+      food: STARTING_FOOD,
       atWar: {},
       host: true,
       ready: false,
@@ -98,7 +99,7 @@
       gold: STARTING_GOLD,
       sci: 0,
       mvp: 0,
-      food: 0,
+      food: STARTING_FOOD,
       atWar: {},
       host: false,
       ready: false,
@@ -159,7 +160,7 @@
 
     await gref(code, "log").push({
       year: 1,
-      text: `Year 1 begins. Every civilization starts with ${STARTING_GOLD}M Gold.`,
+      text: `Year 1 begins. Every civilization starts with ${STARTING_GOLD}M Gold and ${STARTING_FOOD} Food.`,
       kind: "",
       ts: Date.now(),
     });
@@ -445,6 +446,11 @@
       if (goldGain) updates[`players/${p.uid}/gold`] = (p.gold || 0) + goldGain;
       if (sciGain)  updates[`players/${p.uid}/sci`]  = (p.sci  || 0) + sciGain;
       if (foodGain) updates[`players/${p.uid}/food`] = (p.food || 0) + foodGain;
+
+      // Reset war state at year boundary so the peace dividend resets each year
+      if (p.atWar && Object.keys(p.atWar).length > 0) {
+        updates[`players/${p.uid}/atWar`] = null;
+      }
     }
 
     // Apply pending Tank hits scheduled for nextYear
