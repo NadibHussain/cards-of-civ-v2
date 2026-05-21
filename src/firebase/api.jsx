@@ -350,10 +350,9 @@
       }
     }
 
-    // Declare war (mutual)
+    // Declare war — only the attacker enters war state
     await gref(code).update({
       [`players/${uid}/atWar/${targetUid}`]: true,
-      [`players/${targetUid}/atWar/${uid}`]: true,
     });
 
     // Check if attacker (uid) is violating any active Bank pact as borrower

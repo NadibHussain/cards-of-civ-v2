@@ -45,9 +45,8 @@ function Rules({ goto }) {
           <li>Turn order is fixed per round (year). Each player takes one full turn before the year advances.</li>
           <li>On your turn: <b>draw from the shared store</b>, <b>play cards</b> from your hand, or <b>pass</b>.</li>
           <li>You can hold a <b>maximum of 7 cards</b> in your hand at once.</li>
-          <li>The store is shared — first to a card gets it.</li>
-          <li>At the end of every year, players <b>not at war</b> receive <span style={{color:"var(--gold-300)"}}>+1M Gold</span>. Persistent effects (Farm, Factory, Market, Science Center) tick.</li>
-          <li>Attacking any player <b>declares war</b>. War lasts until one side falls or a peace card is played.</li>
+          <li>At the end of every year, players <b>not at war</b> receive <span style={{color:"var(--gold-300)"}}>+1M Gold</span>. Persistent card effects (Farm, Factory, Market, Science Center) produce their income for <b>all players</b> regardless of war status.</li>
+          <li>Attacking any player puts <b>only the attacker</b> at war for that year — the defender remains at peace.</li>
         </ul>
       </section>
 
