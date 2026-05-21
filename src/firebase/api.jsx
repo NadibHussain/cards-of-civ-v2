@@ -5,6 +5,7 @@
   const TURN_SECONDS = 75;
   const STARTING_GOLD = 7;
   const TOTAL_ROUNDS_DEFAULT = 20;
+  const MAX_HAND_SIZE = 7;
 
   function gref(code, sub) {
     return window.fb.db.ref(`games/${code}${sub ? "/" + sub : ""}`);
@@ -51,6 +52,7 @@
       gold: STARTING_GOLD,
       sci: 0,
       mvp: 0,
+      food: 0,
       atWar: {},
       host: true,
       ready: false,
@@ -96,6 +98,7 @@
       gold: STARTING_GOLD,
       sci: 0,
       mvp: 0,
+      food: 0,
       atWar: {},
       host: false,
       ready: false,
@@ -183,6 +186,11 @@
     if (!_isYourTurn(game, uid)) throw new Error("Not your turn.");
 
     const p = game.players[uid];
+
+    // Max hand size
+    const handSize = Object.keys(game.hand?.[uid] || {}).length;
+    if (handSize >= MAX_HAND_SIZE) throw new Error(`Hand is full (max ${MAX_HAND_SIZE} cards).`);
+
     // Logistics Doctrine: −1 gold per stack on military cards (floor at 0)
     const logistics = game.structures?.[uid]?.["mil-reduce"] || 0;
     let gold = card.cost.gold || 0;
@@ -190,6 +198,12 @@
       gold = Math.max(0, gold - logistics);
     }
     const sci = card.cost.sci || 0;
+
+    // Bank requires a minimum balance of 10 gold (before cost is applied)
+    if (card.id === "bank" && (p.gold || 0) < 10) {
+      throw new Error("Bank requires at least 10 Gold in your treasury.");
+    }
+
     if (p.gold < gold || p.sci < sci) {
       throw new Error("Not enough resources.");
     }
@@ -218,11 +232,17 @@
     const game = gameSnap.val();
     if (!_isYourTurn(game, uid)) throw new Error("Not your turn.");
 
+    // Factory requires 3 Farm cards already placed
+    if (card.id === "factory") {
+      const farmCount = game.structures?.[uid]?.agriculture || 0;
+      if (farmCount < 3) throw new Error("Factory requires at least 3 Farm cards already played.");
+    }
+
     await gref(code, `hand/${uid}/${handKey}`).remove();
 
-    // Persistent effect — register structures.
+    // Persistent effect — register structures
     const updates = {};
-    if (card.id === "sci-center" || card.id === "factory" || card.id === "agriculture" || card.id === "bank" || card.id === "defence" || card.id === "mil-reduce") {
+    if (["sci-center","factory","agriculture","defence","mil-reduce","market"].includes(card.id)) {
       updates[`structures/${uid}/${card.id}`] = (game.structures?.[uid]?.[card.id] || 0) + 1;
     }
     if (Object.keys(updates).length) await gref(code).update(updates);
@@ -231,6 +251,45 @@
       year: game.meta.year,
       text: `${game.players[uid].name} played ${card.name}.`,
       kind: card.cat === "science" ? "sci" : "eco",
+      ts: Date.now(),
+    });
+  }
+
+  // Play the Bank card: give 5 gold to target, establish a 5-year pact.
+  async function playBank(code, handKey, targetUid) {
+    const uid = await _uid();
+
+    const gameSnap = await gref(code).once("value");
+    const game = gameSnap.val();
+    if (!game || game.meta.status !== "playing") throw new Error("Game not in progress.");
+    if (!_isYourTurn(game, uid)) throw new Error("Not your turn.");
+    if (!game.players[targetUid]) throw new Error("Target not in game.");
+    if (targetUid === uid) throw new Error("Cannot make a pact with yourself.");
+
+    const p = game.players[uid];
+    if ((p.gold || 0) < 5) throw new Error("You need at least 5 Gold to fund the pact.");
+
+    const currentYear = game.meta.year || 1;
+    const loanKey = gref(code, "bankLoans").push().key;
+
+    await gref(code, `hand/${uid}/${handKey}`).remove();
+    await gref(code).update({
+      [`players/${uid}/gold`]: (p.gold || 0) - 5,
+      [`players/${targetUid}/gold`]: (game.players[targetUid].gold || 0) + 5,
+      [`bankLoans/${loanKey}`]: {
+        lender: uid,
+        borrower: targetUid,
+        amount: 5,
+        createdYear: currentYear,
+        expiresYear: currentYear + 5,
+        violated: false,
+      },
+    });
+
+    await gref(code, "log").push({
+      year: currentYear,
+      text: `${p.name} (Bank) gave 5M Gold to ${game.players[targetUid].name} — peace pact for 5 years.`,
+      kind: "eco",
       ts: Date.now(),
     });
   }
@@ -292,6 +351,26 @@
       [`players/${targetUid}/atWar/${uid}`]: true,
     });
 
+    // Check if attacker (uid) is violating any active Bank pact as borrower
+    const bankLoans = game.bankLoans || {};
+    const currentYear = game.meta.year || 1;
+    for (const [k, loan] of Object.entries(bankLoans)) {
+      if (loan.borrower === uid && !loan.violated && loan.expiresYear > currentYear) {
+        const lenderGold = game.players[loan.lender]?.gold || 0;
+        await gref(code).update({
+          [`bankLoans/${k}/violated`]: true,
+          [`players/${loan.lender}/gold`]: Math.max(0, lenderGold - 3),
+        });
+        const lenderName = game.players[loan.lender]?.name || "lender";
+        await gref(code, "log").push({
+          year: currentYear,
+          text: `${game.players[uid].name} broke the Bank pact — ${lenderName} loses 3M Gold.`,
+          kind: "war",
+          ts: Date.now(),
+        });
+      }
+    }
+
     // VP if target falls to 0 gold from this hit
     const targetAfterSnap = await gref(code, `players/${targetUid}/gold`).once("value");
     if (hit && targetAfterSnap.val() === 0 && (game.players[targetUid].gold || 0) > 0) {
@@ -331,24 +410,39 @@
   // Compute and apply persistent effects when a new year starts.
   function _yearTickUpdates(game, nextYear) {
     const updates = {};
+    const bankLogs = [];
     const players = _orderedPlayers(game.players);
+
     for (const p of players) {
       const at = p.atWar ? Object.keys(p.atWar).length : 0;
       const structs = game.structures?.[p.uid] || {};
       let goldGain = 0;
       let sciGain = 0;
+      let foodGain = 0;
+
       if (at === 0) goldGain += 1; // peace dividend
+
+      // Market: +2 gold/year
+      const markets = structs.market || 0;
+      goldGain += markets * 2;
+
+      // Farm: +1 food/year each
+      const farms = structs.agriculture || 0;
+      foodGain += farms;
+
+      // Factory: +4 food/year each (requires 3 farms, enforced at play time)
       const factories = structs.factory || 0;
-      goldGain += factories * (at === 0 ? 2 : 1);
-      const ag = structs.agriculture || 0;
-      goldGain += Math.floor(ag * 0.5 + 0.5 * (nextYear % 2));
+      foodGain += factories * 4;
+
+      // Science Center: +3 SP/year
       const sciC = structs["sci-center"] || 0;
       sciGain += sciC * 3;
-      const banks = structs.bank || 0;
-      if (at === 0) goldGain += banks; // simplified 10% return
+
       if (goldGain) updates[`players/${p.uid}/gold`] = (p.gold || 0) + goldGain;
       if (sciGain)  updates[`players/${p.uid}/sci`]  = (p.sci  || 0) + sciGain;
+      if (foodGain) updates[`players/${p.uid}/food`] = (p.food || 0) + foodGain;
     }
+
     // Apply pending Tank hits scheduled for nextYear
     const pending = game.pendingHits || {};
     const pendingLogs = [];
@@ -364,17 +458,33 @@
         });
       }
     }
-    return { updates, pendingLogs };
+
+    // Process Bank loan expirations
+    const bankLoans = game.bankLoans || {};
+    for (const [k, loan] of Object.entries(bankLoans)) {
+      if (loan.expiresYear === nextYear) {
+        if (!loan.violated) {
+          // Pact kept — return 5 gold to lender
+          const before = updates[`players/${loan.lender}/gold`] != null
+            ? updates[`players/${loan.lender}/gold`]
+            : (game.players?.[loan.lender]?.gold || 0);
+          updates[`players/${loan.lender}/gold`] = before + 5;
+          const lenderName = game.players?.[loan.lender]?.name || "lender";
+          const borrowerName = game.players?.[loan.borrower]?.name || "borrower";
+          bankLogs.push({ text: `Bank pact expired: ${borrowerName} kept peace — ${lenderName} earns back 5M Gold.`, kind: "eco" });
+        }
+        updates[`bankLoans/${k}`] = null; // consume loan
+      }
+    }
+
+    return { updates, pendingLogs, bankLogs };
   }
 
   function _detectVictory(game) {
     const players = _orderedPlayers(game.players);
     for (const p of players) if ((p.sci || 0) >= 100) return { winner: p, type: "Science" };
     for (const p of players) if ((p.mvp || 0) >= 2)   return { winner: p, type: "Military" };
-    const sorted = [...players].sort((a,b) => (b.gold||0) - (a.gold||0));
-    if (sorted.length >= 2 && (sorted[0].gold||0) - (sorted[1].gold||0) >= 50) {
-      return { winner: sorted[0], type: "Economy" };
-    }
+    // Economy victory is determined at game end (timeout), not mid-game
     return null;
   }
 
@@ -404,7 +514,7 @@
     let nextYear = game.meta.year;
     if (wrapped) {
       nextYear += 1;
-      const { updates: tickUpdates, pendingLogs } = _yearTickUpdates(game, nextYear);
+      const { updates: tickUpdates, pendingLogs, bankLogs } = _yearTickUpdates(game, nextYear);
       Object.assign(updates, tickUpdates);
       const newLogKey = gref(code, "log").push().key;
       updates[`log/${newLogKey}`] = {
@@ -420,6 +530,15 @@
           year: nextYear,
           text: `${fromName}'s Tank shells ${tgtName} again — ${pl.dmg}M lost.`,
           kind: "war", ts: Date.now() + 1,
+        };
+      }
+      for (const bl of bankLogs) {
+        const k = gref(code, "log").push().key;
+        updates[`log/${k}`] = {
+          year: nextYear,
+          text: bl.text,
+          kind: bl.kind,
+          ts: Date.now() + 2,
         };
       }
     }
@@ -452,15 +571,19 @@
         kind: "win", ts: Date.now(),
       };
     } else if (nextYear > game.meta.totalRounds) {
-      // Time-out victory: highest combined score
-      const scored = [...players].sort((a,b) =>
-        ((b.sci||0)*2 + (b.gold||0) + (b.mvp||0)*30) -
-        ((a.sci||0)*2 + (a.gold||0) + (a.mvp||0)*30)
-      );
+      // Time-out: Economy victory — wealthiest civilization wins
+      const projPlayers = _orderedPlayers(projected.players);
+      const byGold = [...projPlayers].sort((a,b) => (b.gold||0) - (a.gold||0));
       updates["meta/status"] = "finished";
-      updates["meta/winnerId"] = scored[0].uid;
-      updates["meta/victoryType"] = "Time — high score";
+      updates["meta/winnerId"] = byGold[0].uid;
+      updates["meta/victoryType"] = "Economy";
       updates["meta/finishedAt"] = Date.now();
+      const winLogKey = gref(code, "log").push().key;
+      updates[`log/${winLogKey}`] = {
+        year: nextYear,
+        text: `The age ends. ${byGold[0].name} wins the Economy victory with the most Gold!`,
+        kind: "win", ts: Date.now(),
+      };
     }
 
     await gref(code).update(updates);
@@ -494,7 +617,8 @@
   // Expose
   window.api = {
     createGame, joinGame, leaveGame, setReady, selectCountry, startGame,
-    buyCard, playEconScience, attackPlayer, endTurn,
+    buyCard, playEconScience, playBank, attackPlayer, endTurn,
     TURN_SECONDS,
+    MAX_HAND_SIZE,
   };
 })();

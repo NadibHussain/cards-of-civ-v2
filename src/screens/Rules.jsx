@@ -9,8 +9,8 @@ function Rules({ goto }) {
       <h1>How to play</h1>
       <p className="lead">
         Cards of Civilization is a turn-based card game for 3–8 players. Each round is a year.
-        You start with 7 Gold and play cards from a shared store to build wealth, research science, or wage war.
-        First to fulfil any of three victory conditions wins.
+        You start with 7 Gold and play cards from a shared store to build wealth, grow your food supply, research science, or wage war.
+        First to fulfil a victory condition wins — or the wealthiest civilization at the end of the age takes the Economy victory.
       </p>
 
       <section>
@@ -19,7 +19,12 @@ function Rules({ goto }) {
           <div className="res-tile">
             <div className="icon">◆</div>
             <h4>Gold (M)</h4>
-            <p>Spent on every card. Earned from Factories, Banks, Agriculture, and the +1M annual peace dividend.</p>
+            <p>Spent on every card. Earned from Markets, Banks, and the +1M annual peace dividend.</p>
+          </div>
+          <div className="res-tile">
+            <div className="icon">◇</div>
+            <h4>Food</h4>
+            <p>Produced by Farm (+1/year) and Factory (+4/year). Represents your civilization's agricultural output. Three Farms are required to build a Factory.</p>
           </div>
           <div className="res-tile">
             <div className="icon">✦</div>
@@ -39,8 +44,9 @@ function Rules({ goto }) {
         <ul>
           <li>Turn order is fixed per round (year). Each player takes one full turn before the year advances.</li>
           <li>On your turn: <b>draw from the shared store</b>, <b>play cards</b> from your hand, or <b>pass</b>.</li>
+          <li>You can hold a <b>maximum of 7 cards</b> in your hand at once.</li>
           <li>The store is shared — first to a card gets it.</li>
-          <li>At the end of every year, players <b>not at war</b> receive <span style={{color:"var(--gold-300)"}}>+1M Gold</span>. Persistent effects (Factory, Agriculture, Science Center) tick.</li>
+          <li>At the end of every year, players <b>not at war</b> receive <span style={{color:"var(--gold-300)"}}>+1M Gold</span>. Persistent effects (Farm, Factory, Market, Science Center) tick.</li>
           <li>Attacking any player <b>declares war</b>. War lasts until one side falls or a peace card is played.</li>
         </ul>
       </section>
@@ -54,7 +60,7 @@ function Rules({ goto }) {
           </div>
           <div className="vc eco">
             <h4>Economy</h4>
-            <p>Hold a Gold treasury <b>≥ 50M ahead</b> of every other player.</p>
+            <p>Awarded at the <b>end of the game</b> to the civilization with the <b>most Gold</b>. Build Markets and manage your treasury wisely.</p>
           </div>
           <div className="vc sci">
             <h4>Science</h4>
@@ -75,6 +81,15 @@ function Rules({ goto }) {
         <div className="cards-grid">
           {byCat("economy").map(c => <CardView key={c.id} card={c} disabled={true} />)}
         </div>
+        <div style={{marginTop:"1rem",padding:"0.75rem 1rem",background:"var(--ink-800)",borderRadius:8,fontSize:13,color:"var(--ink-300)"}}>
+          <b style={{color:"var(--parch-100)"}}>Economy card notes:</b>
+          <ul style={{marginTop:"0.5rem",paddingLeft:"1.2rem"}}>
+            <li><b>Farm</b> costs 2 Gold and gives +1 Food every year. It is the foundation of the Factory.</li>
+            <li><b>Factory</b> requires 3 Farm cards already played before it can be activated. Once placed, it yields +4 Food per year.</li>
+            <li><b>Market</b> costs 2 Gold and provides a reliable +2 Gold every year — excellent for fuelling your treasury.</li>
+            <li><b>Bank</b> requires 10 Gold in your balance to purchase (costs 5 Gold). When played, you give 5M Gold to another player and establish a 5-year peace pact. If they honour the pact you earn back 5M Gold at expiry. If they attack anyone during that period, you immediately lose 3M Gold.</li>
+          </ul>
+        </div>
       </section>
 
       <section>
@@ -90,7 +105,7 @@ function Rules({ goto }) {
           <li><b>Host</b> creates a game; the system generates a unique 6-character token (e.g. <span style={{fontFamily:"var(--font-mono)",color:"var(--gold-400)"}}>A7K2QM</span>).</li>
           <li>Players join by entering the token. Lobby opens with 3–8 player slots.</li>
           <li>Once everyone is ready, the host starts Year 1.</li>
-          <li>Game length is set at lobby creation (10–30 years). Earliest fulfilled victory condition wins. If no one wins by the final year, the player with the highest combined score takes it.</li>
+          <li>Game length is set at lobby creation (10–30 years). Military (2 VP) and Science (100 SP) victories can trigger at any time. If no one reaches these by the final year, the player with the <b>most Gold</b> wins the Economy victory.</li>
         </ul>
       </section>
     </div>

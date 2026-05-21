@@ -6,6 +6,8 @@ function Game({ game, code, uid, loading, onLeave }) {
 
   const [attackModal, setAttackModal] = React.useState(null); // { card, handKey }
   const [target, setTarget] = React.useState(null);
+  const [bankModal, setBankModal] = React.useState(null); // { handKey }
+  const [bankTarget, setBankTarget] = React.useState(null);
   const [toast, setToast] = React.useState("");
   const [shopOpen, setShopOpen] = React.useState(false);
   const [shopTab, setShopTab] = React.useState("all");
@@ -26,6 +28,7 @@ function Game({ game, code, uid, loading, onLeave }) {
 
   const handObj = game?.hand?.[uid] || {};
   const handEntries = Object.entries(handObj); // [[key, cardId], ...]
+  const maxHand = window.api?.MAX_HAND_SIZE || 7;
 
   const remaining = window.useTurnTimer(meta.turnDeadline);
 
@@ -66,6 +69,9 @@ function Game({ game, code, uid, loading, onLeave }) {
     if (card.cat === "military") {
       setAttackModal({ card, handKey });
       setTarget(null);
+    } else if (card.id === "bank") {
+      setBankModal({ handKey });
+      setBankTarget(null);
     } else {
       safe(() => window.api.playEconScience(code, handKey, cardId));
     }
@@ -76,6 +82,14 @@ function Game({ game, code, uid, loading, onLeave }) {
     safe(async () => {
       await window.api.attackPlayer(code, attackModal.handKey, attackModal.card.id, target);
       setAttackModal(null); setTarget(null);
+    });
+  }
+
+  function confirmBank() {
+    if (!bankTarget || !bankModal) return;
+    safe(async () => {
+      await window.api.playBank(code, bankModal.handKey, bankTarget);
+      setBankModal(null); setBankTarget(null);
     });
   }
 
@@ -213,6 +227,10 @@ function Game({ game, code, uid, loading, onLeave }) {
                     <span className="lbl">VP</span>
                     <span className="val">{p.mvp || 0}<small style={{fontSize:9,color:"var(--ink-400)",marginLeft:1,fontFamily:"var(--font-mono)"}}>/2</small></span>
                   </div>
+                  <div className="stat food">
+                    <span className="lbl">Food</span>
+                    <span className="val">{p.food || 0}</span>
+                  </div>
                 </div>
                 <div className="opp-foot">
                   <div className="badges">
@@ -301,6 +319,10 @@ function Game({ game, code, uid, loading, onLeave }) {
             <span className="ico">✦</span>
             <div><div className="lbl">Science</div><div className="val">{you?.sci || 0}<small>SP</small></div></div>
           </div>
+          <div className="dash-res food">
+            <span className="ico">◇</span>
+            <div><div className="lbl">Food</div><div className="val">{you?.food || 0}</div></div>
+          </div>
           <div className="dash-res vic">
             <span className="ico">★</span>
             <div><div className="lbl">Victory</div><div className="val">{you?.mvp || 0}<small>/2</small></div></div>
@@ -315,7 +337,7 @@ function Game({ game, code, uid, loading, onLeave }) {
           </button>
           <button className="btn ghost" onClick={() => setHandOpen(!handOpen)} style={{padding:"10px 14px",fontSize:12}}>
             {handOpen ? "Hide hand" : "Show hand"}
-            <span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background:"var(--gold-500)",color:"var(--ink-900)",fontFamily:"var(--font-mono)",fontSize:10}}>{handEntries.length}</span>
+            <span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background: handEntries.length >= maxHand ? "var(--mil-400)" : "var(--gold-500)",color:"var(--ink-900)",fontFamily:"var(--font-mono)",fontSize:10}}>{handEntries.length}/{maxHand}</span>
           </button>
           <button className="btn primary" onClick={() => safe(() => window.api.endTurn(code))} disabled={!yourTurn || busy}>
             End turn →
@@ -328,7 +350,7 @@ function Game({ game, code, uid, loading, onLeave }) {
           <div className="modal shop-modal" onClick={(e) => e.stopPropagation()}>
             <a className="close" onClick={() => setShopOpen(false)}>✕</a>
             <h2>Store</h2>
-            <p className="lead">Cards are always available. Buy any card you can afford.</p>
+            <p className="lead">Cards are always available. Buy any card you can afford. <span style={{color: handEntries.length >= maxHand ? "var(--mil-400)" : "var(--ink-300)"}}>Hand: {handEntries.length}/{maxHand}</span></p>
             <div className="shop-tabs">
               {["all","military","economy","science"].map(t => (
                 <button key={t}
@@ -350,6 +372,8 @@ function Game({ game, code, uid, loading, onLeave }) {
                 <span>Your purse: <b>{you?.gold || 0}M Gold</b></span>
                 <span>·</span>
                 <span><b>{you?.sci || 0}SP</b></span>
+                <span>·</span>
+                <span><b>{you?.food || 0} Food</b></span>
               </div>
               <button className="btn ghost" onClick={() => setShopOpen(false)}>Close</button>
             </div>
@@ -385,6 +409,41 @@ function Game({ game, code, uid, loading, onLeave }) {
             <div className="footer-actions">
               <button className="btn ghost" onClick={() => setAttackModal(null)}>Cancel</button>
               <button className="btn danger" disabled={!target || busy} onClick={confirmAttack}>Strike →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {bankModal && (
+        <div className="modal-backdrop" onClick={() => setBankModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <a className="close" onClick={() => setBankModal(null)}>✕</a>
+            <h2>Bank Pact</h2>
+            <p className="lead">
+              Choose a civilization to receive <b style={{color:"var(--gold-400)"}}>5M Gold</b>.
+              They agree not to attack anyone for <b>5 years</b>.
+              If they keep the pact you earn <b style={{color:"var(--eco-400)"}}>+5M Gold</b> at expiry.
+              If they break it you lose <b style={{color:"var(--mil-400)"}}>3M Gold</b> immediately.
+            </p>
+            <div className="target-list">
+              {opps.map(p => (
+                <div key={p.uid}
+                  className={`target ${bankTarget===p.uid?"selected":""}`}
+                  onClick={() => setBankTarget(p.uid)}>
+                  <Avatar name={p.name} color={p.color} size={28} />
+                  <div>
+                    <div style={{color:"var(--parch-50)",fontSize:13}}>{p.name}</div>
+                    <div style={{color:"var(--ink-400)",fontSize:11,fontFamily:"var(--font-mono)"}}>{p.nation} · {p.gold}M Gold</div>
+                  </div>
+                  <span style={{fontFamily:"var(--font-mono)",fontSize:10,color:"var(--ink-300)",letterSpacing:"0.1em"}}>
+                    {you?.atWar && you.atWar[p.uid] ? "AT WAR" : "PEACE"}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="footer-actions">
+              <button className="btn ghost" onClick={() => setBankModal(null)}>Cancel</button>
+              <button className="btn primary" disabled={!bankTarget || busy} onClick={confirmBank}>Establish Pact →</button>
             </div>
           </div>
         </div>
