@@ -8,6 +8,7 @@ function Game({ game, code, uid, loading, onLeave }) {
   const [target, setTarget] = React.useState(null);
   const [bankModal, setBankModal] = React.useState(null); // { handKey }
   const [bankTarget, setBankTarget] = React.useState(null);
+  const [discardModal, setDiscardModal] = React.useState(null); // { card, handKey }
   const [toast, setToast] = React.useState("");
   const [shopOpen, setShopOpen] = React.useState(false);
   const [shopTab, setShopTab] = React.useState("all");
@@ -90,6 +91,14 @@ function Game({ game, code, uid, loading, onLeave }) {
     safe(async () => {
       await window.api.playBank(code, bankModal.handKey, bankTarget);
       setBankModal(null); setBankTarget(null);
+    });
+  }
+
+  function confirmDiscard() {
+    if (!discardModal) return;
+    safe(async () => {
+      await window.api.discardCard(code, discardModal.handKey, discardModal.card.id);
+      setDiscardModal(null);
     });
   }
 
@@ -288,10 +297,21 @@ function Game({ game, code, uid, loading, onLeave }) {
             {handEntries.map(([k, id]) => {
               const c = getCard(id);
               if (!c) return null;
+              const refund = Math.floor((c.cost?.gold || 0) / 2);
               return (
-                <CardView key={k} card={c}
-                  onClick={() => onHandCardClick([k, id])}
-                  you={you} disabled={!yourTurn || busy} />
+                <div key={k} className="hand-card-wrap">
+                  <CardView card={c}
+                    onClick={() => onHandCardClick([k, id])}
+                    you={you} disabled={!yourTurn || busy} />
+                  {yourTurn && !busy && (
+                    <button
+                      className="discard-btn"
+                      title={`Discard for ${refund} gold`}
+                      onClick={() => setDiscardModal({ card: c, handKey: k })}>
+                      ✕ Discard{refund > 0 ? ` (+${refund}g)` : ""}
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -409,6 +429,25 @@ function Game({ game, code, uid, loading, onLeave }) {
             <div className="footer-actions">
               <button className="btn ghost" onClick={() => setAttackModal(null)}>Cancel</button>
               <button className="btn danger" disabled={!target || busy} onClick={confirmAttack}>Strike →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {discardModal && (
+        <div className="modal-backdrop" onClick={() => setDiscardModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <a className="close" onClick={() => setDiscardModal(null)}>✕</a>
+            <h2>Discard Card</h2>
+            <p className="lead">
+              Discard <b style={{color:"var(--parch-100)"}}>{discardModal.card.name}</b>?
+              {Math.floor((discardModal.card.cost?.gold || 0) / 2) > 0
+                ? <> You will recoup <b style={{color:"var(--gold-400)"}}>{Math.floor((discardModal.card.cost?.gold || 0) / 2)} gold</b> (50% of cost, rounded down).</>
+                : <> No refund — this card's cost rounds down to 0.</>}
+            </p>
+            <div className="footer-actions">
+              <button className="btn ghost" onClick={() => setDiscardModal(null)}>Cancel</button>
+              <button className="btn danger" disabled={busy} onClick={confirmDiscard}>Discard →</button>
             </div>
           </div>
         </div>

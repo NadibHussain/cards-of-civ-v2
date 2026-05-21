@@ -52,6 +52,35 @@ function Rules({ goto }) {
       </section>
 
       <section>
+        <h2>Discarding cards</h2>
+        <p style={{marginBottom:"0.75rem",color:"var(--ink-300)",fontSize:14}}>
+          On your turn you may discard any card from your hand. You recoup <b>50% of its gold cost</b>, rounded down. Discarding frees up hand space and recovers partial value from cards you no longer need.
+        </p>
+        <div style={{overflowX:"auto"}}>
+          <table style={{width:"100%",borderCollapse:"collapse",fontSize:13}}>
+            <thead>
+              <tr style={{borderBottom:"1px solid var(--ink-700)",color:"var(--ink-300)",textAlign:"left"}}>
+                <th style={{padding:"6px 8px",fontWeight:600}}>Card</th>
+                <th style={{padding:"6px 8px",fontWeight:600}}>Gold cost</th>
+                <th style={{padding:"6px 8px",fontWeight:600}}>Discard refund</th>
+              </tr>
+            </thead>
+            <tbody>
+              {window.CARDS.filter(c => c.cost.gold > 0).map(c => (
+                <tr key={c.id} style={{borderBottom:"1px solid var(--ink-800)"}}>
+                  <td style={{padding:"5px 8px",color:"var(--parch-100)"}}>{c.name}</td>
+                  <td style={{padding:"5px 8px",color:"var(--gold-300)",fontFamily:"var(--font-mono)"}}>{c.cost.gold} gold</td>
+                  <td style={{padding:"5px 8px",color: Math.floor(c.cost.gold/2) > 0 ? "var(--eco-400)" : "var(--ink-500)",fontFamily:"var(--font-mono)"}}>
+                    {Math.floor(c.cost.gold / 2)} gold
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
         <h2>Victory conditions</h2>
         <div className="victory-grid">
           <div className="vc mil">
@@ -84,10 +113,10 @@ function Rules({ goto }) {
         <div style={{marginTop:"1rem",padding:"0.75rem 1rem",background:"var(--ink-800)",borderRadius:8,fontSize:13,color:"var(--ink-300)"}}>
           <b style={{color:"var(--parch-100)"}}>Economy card notes:</b>
           <ul style={{marginTop:"0.5rem",paddingLeft:"1.2rem"}}>
-            <li><b>Farm</b> costs 2 Gold and gives +1 Food every year. It is the foundation of the Factory.</li>
-            <li><b>Factory</b> requires 3 Farm cards already played before it can be activated. Once placed, it yields +4 Food per year.</li>
-            <li><b>Market</b> costs 2 Gold and provides a reliable +2 Gold every year — excellent for fuelling your treasury.</li>
-            <li><b>Bank</b> requires 10 Gold in your balance to purchase (costs 5 Gold). When played, you give 5M Gold to another player and establish a 5-year peace pact. If they honour the pact you earn back 5M Gold at expiry. If they attack anyone during that period, you immediately lose 3M Gold.</li>
+            <li><b>Farm</b> costs 2 gold and gives +1 Food every year. Three Farms are required to build a Factory.</li>
+            <li><b>Factory</b> costs 3 gold and <b>converts</b> your 3 Farm cards into a Factory — the 3 Farms are removed from your structures when Factory is played. The Factory then produces +4 Food per year (replacing the 3 farms' +3 Food).</li>
+            <li><b>Market</b> costs 2 gold and provides a reliable +2 Gold every year — excellent for fuelling your treasury.</li>
+            <li><b>Bank</b> requires 10 gold in your balance to purchase (costs 5 gold). When played, you give 5 gold to another player and establish a 5-year peace pact. If they honour the pact you earn back 5 gold at expiry. If they attack anyone during that period, you immediately lose 3 gold.</li>
           </ul>
         </div>
       </section>
