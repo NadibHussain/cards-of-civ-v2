@@ -354,6 +354,42 @@
 .hand-float .card .card-art .art-glyph { font-size: 24px; }
 .hand-float .card .card-art .art-tag { font-size: 7.5px; }
 
+.hand-card-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  pointer-events: auto;
+  flex: 0 0 auto;
+}
+.hand-card-wrap .card {
+  pointer-events: auto;
+  flex: none;
+  width: 138px;
+  min-height: 170px;
+  padding: 10px;
+  transition: transform .2s ease;
+}
+.hand-card-wrap .card:hover { transform: translateY(-8px); }
+.discard-btn {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--mil-400);
+  background: transparent;
+  border: 1px solid var(--mil-700);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s;
+}
+.discard-btn:hover {
+  background: var(--mil-900);
+  color: var(--mil-200);
+  border-color: var(--mil-400);
+}
+
 /* Shop button */
 .shop-btn {
   display: inline-flex;

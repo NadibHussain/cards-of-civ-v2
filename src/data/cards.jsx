@@ -42,8 +42,8 @@ window.CARDS = [
     id: "factory", cat: "economy", name: "Factory",
     cost: { gold: 3 }, chance: null,
     art: "INDUSTRY", glyph: "▥", artLabel: "Factory facade",
-    effect: <>Requires <span className="hi">3 Farm cards</span> already played. Produces <span className="hi">+4 Food</span> every year.</>,
-    summary: "Req. 3 Farms · +4 Food / year"
+    effect: <>Converts <span className="hi">3 Farm cards</span> into a Factory — the 3 Farms are removed. Produces <span className="hi">+4 Food</span> every year.</>,
+    summary: "Consumes 3 Farms · +4 Food / year"
   },
   {
     id: "bank", cat: "economy", name: "Bank",

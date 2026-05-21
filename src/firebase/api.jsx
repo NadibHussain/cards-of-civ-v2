@@ -232,7 +232,7 @@
     const game = gameSnap.val();
     if (!_isYourTurn(game, uid)) throw new Error("Not your turn.");
 
-    // Factory requires 3 Farm cards already placed
+    // Factory requires 3 Farm cards already placed; converts (consumes) them
     if (card.id === "factory") {
       const farmCount = game.structures?.[uid]?.agriculture || 0;
       if (farmCount < 3) throw new Error("Factory requires at least 3 Farm cards already played.");
@@ -244,6 +244,10 @@
     const updates = {};
     if (["sci-center","factory","agriculture","defence","mil-reduce","market"].includes(card.id)) {
       updates[`structures/${uid}/${card.id}`] = (game.structures?.[uid]?.[card.id] || 0) + 1;
+    }
+    // Factory consumes the 3 farms that were required
+    if (card.id === "factory") {
+      updates[`structures/${uid}/agriculture`] = (game.structures?.[uid]?.agriculture || 0) - 3;
     }
     if (Object.keys(updates).length) await gref(code).update(updates);
 
@@ -614,10 +618,37 @@
     });
   }
 
+  // Discard a card from hand — refund is floor(goldCost / 2)
+  async function discardCard(code, handKey, cardId) {
+    const uid = await _uid();
+    const card = window.getCardById(cardId);
+    if (!card) throw new Error("Unknown card");
+
+    const gameSnap = await gref(code).once("value");
+    const game = gameSnap.val();
+    if (!game || game.meta.status !== "playing") throw new Error("Game not in progress.");
+    if (!_isYourTurn(game, uid)) throw new Error("Not your turn.");
+
+    const refund = Math.floor((card.cost.gold || 0) / 2);
+    const p = game.players[uid];
+
+    await gref(code, `hand/${uid}/${handKey}`).remove();
+    if (refund > 0) {
+      await gref(code, `players/${uid}/gold`).set((p.gold || 0) + refund);
+    }
+
+    await gref(code, "log").push({
+      year: game.meta.year,
+      text: `${p.name} discarded ${card.name}${refund > 0 ? ` and recouped ${refund} gold` : ""}.`,
+      kind: "",
+      ts: Date.now(),
+    });
+  }
+
   // Expose
   window.api = {
     createGame, joinGame, leaveGame, setReady, selectCountry, startGame,
-    buyCard, playEconScience, playBank, attackPlayer, endTurn,
+    buyCard, playEconScience, playBank, attackPlayer, endTurn, discardCard,
     TURN_SECONDS,
     MAX_HAND_SIZE,
   };

@@ -2,7 +2,7 @@
 function CardView({ card, onClick, disabled, you, qty }) {
   if (!card) return null;
   const costParts = [];
-  if (card.cost.gold) costParts.push(<span key="g"><span className="ico">◆</span> {card.cost.gold}M</span>);
+  if (card.cost.gold) costParts.push(<span key="g"><span className="ico">◆</span> {card.cost.gold} gold</span>);
   if (card.cost.sci)  costParts.push(<span key="s"> <span className="ico">✦</span> {card.cost.sci}SP</span>);
 
   const cantAfford = you && (
