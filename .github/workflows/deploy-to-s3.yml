@@ -1,6 +1,9 @@
 name: Deploy to S3
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       confirm:
@@ -12,7 +15,7 @@ jobs:
   deploy:
     name: Sync repo to S3
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.confirm == 'deploy' }}
+    if: ${{ github.event_name == 'push' || github.event.inputs.confirm == 'deploy' }}
 
     steps:
       - name: Checkout repository
