@@ -193,7 +193,7 @@
     if (handSize >= MAX_HAND_SIZE) throw new Error(`Hand is full (max ${MAX_HAND_SIZE} cards).`);
 
     // Logistics Doctrine: −1 gold per stack on military cards (floor at 0)
-    const logistics = game.structures?.[uid]?.["mil-reduce"] || 0;
+    const logistics = Object.values(game.hand?.[uid] || {}).filter(id => id === "mil-reduce").length;
     let gold = card.cost.gold || 0;
     if (card.cat === "military" && logistics > 0) {
       gold = Math.max(0, gold - logistics);
@@ -216,12 +216,6 @@
       [`hand/${uid}/${handKey}`]: cardId,
     });
 
-    await gref(code, "log").push({
-      year: game.meta.year,
-      text: `${p.name} acquired ${card.name}${logistics && card.cat==="military" ? ` (−${logistics}M from Logistics)` : ""}.`,
-      kind: "",
-      ts: Date.now(),
-    });
   }
 
   async function playEconScience(code, handKey, cardId) {
@@ -311,7 +305,7 @@
 
     // Defence reduces chance
     let chance = card.chance ?? 100;
-    const tgtDefenceLvl = game.structures?.[targetUid]?.defence || 0;
+    const tgtDefenceLvl = Object.values(game.hand?.[targetUid] || {}).filter(id => id === "defence").length;
     if (tgtDefenceLvl > 0 && card.id !== "drone") {
       chance = Math.max(5, chance - 12 * tgtDefenceLvl);
     }
@@ -419,7 +413,7 @@
 
     for (const p of players) {
       const at = p.atWar ? Object.keys(p.atWar).length : 0;
-      const structs = game.structures?.[p.uid] || {};
+      const handCards = Object.values(game.hand?.[p.uid] || {});
       let goldGain = 0;
       let sciGain = 0;
       let foodGain = 0;
@@ -427,20 +421,16 @@
       if (at === 0) goldGain += 1; // peace dividend
 
       // Market: +2 gold/year
-      const markets = structs.market || 0;
-      goldGain += markets * 2;
+      goldGain += handCards.filter(id => id === "market").length * 2;
 
       // Farm: +1 food/year each
-      const farms = structs.agriculture || 0;
-      foodGain += farms;
+      foodGain += handCards.filter(id => id === "agriculture").length;
 
-      // Factory: +4 food/year each (requires 3 farms, enforced at play time)
-      const factories = structs.factory || 0;
-      foodGain += factories * 4;
+      // Factory: +4 food/year each
+      foodGain += handCards.filter(id => id === "factory").length * 4;
 
       // Science Center: +3 SP/year
-      const sciC = structs["sci-center"] || 0;
-      sciGain += sciC * 3;
+      sciGain += handCards.filter(id => id === "sci-center").length * 3;
 
       if (goldGain) updates[`players/${p.uid}/gold`] = (p.gold || 0) + goldGain;
       if (sciGain)  updates[`players/${p.uid}/sci`]  = (p.sci  || 0) + sciGain;

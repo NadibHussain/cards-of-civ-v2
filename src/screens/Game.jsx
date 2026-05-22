@@ -74,7 +74,7 @@ function Game({ game, code, uid, loading, onLeave }) {
       setBankModal({ handKey });
       setBankTarget(null);
     } else {
-      safe(() => window.api.playEconScience(code, handKey, cardId));
+      showToast(`${card.name} is active — bonuses apply at year end while held.`);
     }
   }
 
