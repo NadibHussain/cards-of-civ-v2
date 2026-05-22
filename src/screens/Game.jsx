@@ -302,7 +302,7 @@ function Game({ game, code, uid, loading, onLeave }) {
                 <div key={k} className="hand-card-wrap">
                   <CardView card={c}
                     onClick={() => onHandCardClick([k, id])}
-                    you={you} disabled={!yourTurn || busy} />
+                    disabled={!yourTurn || busy} />
                   {yourTurn && !busy && (
                     <button
                       className="discard-btn"
