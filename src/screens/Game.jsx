@@ -20,6 +20,12 @@ function Game({ game, code, uid, loading, onLeave }) {
   const mountTimeRef = React.useRef(Date.now());
   const animTimerRef = React.useRef(null);
 
+  const [tradeModal, setTradeModal] = React.useState(null);     // { card, handKey }
+  const [tradeTarget, setTradeTarget] = React.useState(null);
+  const [tradesOpen, setTradesOpen] = React.useState(false);
+  const [acceptTradeModal, setAcceptTradeModal] = React.useState(null); // { tradeKey, offer }
+  const [myTradeCard, setMyTradeCard] = React.useState(null);   // { handKey, cardId }
+
   const meta = game?.meta || {};
   const playersObj = game?.players || {};
   const players = Object.values(playersObj).sort((a,b) => (a.order||0) - (b.order||0));
@@ -27,6 +33,12 @@ function Game({ game, code, uid, loading, onLeave }) {
   const activePlayer = players[meta.turnIdx || 0];
   const yourTurn = activePlayer?.uid === uid;
   const opps = players.filter(p => p.uid !== uid);
+
+  const allTradeOffers = game?.tradeOffers
+    ? Object.entries(game.tradeOffers).map(([k, v]) => ({ ...v, _key: k }))
+    : [];
+  const incomingTrades = allTradeOffers.filter(o => o.toUid === uid && o.status === "pending");
+  const outgoingTrades = allTradeOffers.filter(o => o.fromUid === uid && o.status === "pending");
 
   const handObj = game?.hand?.[uid] || {};
   const handEntries = Object.entries(handObj); // [[key, cardId], ...]
@@ -46,6 +58,16 @@ function Game({ game, code, uid, loading, onLeave }) {
     animTimerRef.current = setTimeout(() => setAttackAnim(null), 3500);
     return () => clearTimeout(animTimerRef.current);
   }, [game?.lastAttack?.ts]);
+
+  // Close accept modal if the offer was cancelled or declined while viewing
+  React.useEffect(() => {
+    if (!acceptTradeModal) return;
+    const offer = game?.tradeOffers?.[acceptTradeModal.tradeKey];
+    if (offer && offer.status !== "pending") {
+      setAcceptTradeModal(null);
+      showToast("Trade offer is no longer active.");
+    }
+  }, [game?.tradeOffers, acceptTradeModal?.tradeKey]);
 
   // Auto-advance turn if expired (any client can trigger; transaction-safe)
   React.useEffect(() => {
@@ -320,6 +342,14 @@ function Game({ game, code, uid, loading, onLeave }) {
                       ✕ Discard{refund > 0 ? ` (+${refund}g)` : ""}
                     </button>
                   )}
+                  {!busy && opps.length > 0 && (
+                    <button
+                      className="trade-btn"
+                      title="Offer this card in a trade"
+                      onClick={() => { setTradeModal({ card: c, handKey: k }); setTradeTarget(null); }}>
+                      ⇄ Trade
+                    </button>
+                  )}
                 </div>
               );
             })}
@@ -367,6 +397,16 @@ function Game({ game, code, uid, loading, onLeave }) {
           <button className="btn ghost" onClick={() => setHandOpen(!handOpen)} style={{padding:"10px 14px",fontSize:12}}>
             {handOpen ? "Hide hand" : "Show hand"}
             <span style={{marginLeft:6,padding:"1px 6px",borderRadius:8,background: handEntries.length >= maxHand ? "var(--mil-400)" : "var(--gold-500)",color:"var(--ink-900)",fontFamily:"var(--font-mono)",fontSize:10}}>{handEntries.length}/{maxHand}</span>
+          </button>
+          <button className="btn ghost"
+            style={{padding:"10px 14px",fontSize:12,position:"relative"}}
+            onClick={() => setTradesOpen(true)}>
+            ⇄ Trades
+            {incomingTrades.length > 0 && (
+              <span style={{position:"absolute",top:5,right:5,background:"var(--eco-400)",color:"var(--ink-900)",fontFamily:"var(--font-mono)",fontSize:8,padding:"1px 5px",borderRadius:8,fontWeight:600,lineHeight:"14px"}}>
+                {incomingTrades.length}
+              </span>
+            )}
           </button>
           <button className="btn primary" onClick={() => safe(() => window.api.endTurn(code))} disabled={!yourTurn || busy}>
             End turn →
@@ -511,6 +551,187 @@ function Game({ game, code, uid, loading, onLeave }) {
             <div className="footer-actions">
               <button className="btn ghost" onClick={() => setBankModal(null)}>Cancel</button>
               <button className="btn primary" disabled={!bankTarget || busy} onClick={confirmBank}>Establish Pact →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tradeModal && (
+        <div className="modal-backdrop" onClick={() => setTradeModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <a className="close" onClick={() => setTradeModal(null)}>✕</a>
+            <h2>Propose Trade</h2>
+            <p className="lead">
+              Offering <b style={{color:"var(--parch-100)"}}>{tradeModal.card.name}</b> — select a civilization to send the offer to.
+              They will choose which of their cards to give in return.
+            </p>
+            <div className="target-list">
+              {opps.map(p => {
+                const alreadySent = outgoingTrades.some(o => o.toUid === p.uid && o.offeredHandKey === tradeModal.handKey);
+                return (
+                  <div key={p.uid}
+                    className={`target eco ${tradeTarget===p.uid?"selected":""}`}
+                    onClick={() => setTradeTarget(p.uid)}>
+                    <Avatar name={p.name} color={p.color} flag={p.flag||undefined} size={28} />
+                    <div>
+                      <div style={{color:"var(--parch-50)",fontSize:13}}>{p.name}</div>
+                      <div style={{color:"var(--ink-400)",fontSize:11,fontFamily:"var(--font-mono)"}}>{p.flag} {p.nation}</div>
+                    </div>
+                    <span style={{fontFamily:"var(--font-mono)",fontSize:10,color:"var(--eco-400)",letterSpacing:"0.1em"}}>
+                      {alreadySent ? "SENT" : ""}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="footer-actions">
+              <button className="btn ghost" onClick={() => setTradeModal(null)}>Cancel</button>
+              <button className="btn primary" disabled={!tradeTarget || busy}
+                onClick={() => safe(async () => {
+                  await window.api.proposeTrade(code, tradeModal.handKey, tradeModal.card.id, tradeTarget);
+                  setTradeModal(null); setTradeTarget(null);
+                  showToast("Trade offer sent.");
+                })}>
+                Send Offer →
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {tradesOpen && (
+        <div className="modal-backdrop" onClick={() => setTradesOpen(false)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <a className="close" onClick={() => setTradesOpen(false)}>✕</a>
+            <h2>Trade Offers</h2>
+            {incomingTrades.length === 0 && outgoingTrades.length === 0 && (
+              <p className="lead">No active trade offers. Use the Trade button on a hand card to propose one.</p>
+            )}
+            {incomingTrades.length > 0 && (
+              <>
+                <p className="lead">Incoming offers — someone wants to trade with you:</p>
+                <div style={{display:"grid",gap:8,marginBottom:16}}>
+                  {incomingTrades.map(o => {
+                    const from = playersObj[o.fromUid];
+                    const card = getCard(o.offeredCardId);
+                    return (
+                      <div key={o._key} style={{display:"grid",gridTemplateColumns:"1fr auto",alignItems:"center",gap:10,padding:"12px 14px",background:"var(--eco-bg)",border:"1px solid var(--eco-500)",borderRadius:"var(--radius)"}}>
+                        <div style={{fontSize:13}}>
+                          <b style={{color:"var(--parch-50)"}}>{from?.name}</b>
+                          {" "}offers{" "}
+                          <b style={{color:"var(--gold-300)"}}>{card?.name}</b>
+                          <div style={{color:"var(--ink-400)",fontSize:10,fontFamily:"var(--font-mono)",marginTop:2}}>{card?.cat} · {card?.summary}</div>
+                        </div>
+                        <div style={{display:"flex",gap:6,flexShrink:0}}>
+                          <button className="btn ghost" style={{padding:"5px 10px",fontSize:11,minHeight:0}}
+                            disabled={busy}
+                            onClick={() => safe(async () => {
+                              await window.api.declineTrade(code, o._key);
+                              showToast("Trade declined.");
+                            })}>
+                            Decline
+                          </button>
+                          <button className="btn primary" style={{padding:"5px 10px",fontSize:11,minHeight:0}}
+                            onClick={() => { setAcceptTradeModal({tradeKey:o._key, offer:o}); setMyTradeCard(null); setTradesOpen(false); }}>
+                            Review →
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            {outgoingTrades.length > 0 && (
+              <>
+                <p className="lead" style={{marginTop: incomingTrades.length > 0 ? 8 : 0}}>Outgoing offers — awaiting responses:</p>
+                <div style={{display:"grid",gap:8,marginBottom:16}}>
+                  {outgoingTrades.map(o => {
+                    const to = playersObj[o.toUid];
+                    const card = getCard(o.offeredCardId);
+                    return (
+                      <div key={o._key} style={{display:"grid",gridTemplateColumns:"1fr auto",alignItems:"center",gap:10,padding:"12px 14px",background:"var(--ink-700)",border:"1px solid var(--ink-600)",borderRadius:"var(--radius)"}}>
+                        <div style={{fontSize:13}}>
+                          Offering <b style={{color:"var(--gold-300)"}}>{card?.name}</b>
+                          {" "}to{" "}
+                          <b style={{color:"var(--parch-50)"}}>{to?.name}</b>
+                          <div style={{color:"var(--ink-400)",fontSize:10,fontFamily:"var(--font-mono)",marginTop:2}}>PENDING</div>
+                        </div>
+                        <button className="btn ghost" style={{padding:"5px 10px",fontSize:11,minHeight:0,flexShrink:0}}
+                          disabled={busy}
+                          onClick={() => safe(async () => {
+                            await window.api.cancelTrade(code, o._key);
+                            showToast("Trade offer cancelled.");
+                          })}>
+                          Cancel
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+            <div className="footer-actions">
+              <button className="btn ghost" onClick={() => setTradesOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {acceptTradeModal && (
+        <div className="modal-backdrop" onClick={() => setAcceptTradeModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <a className="close" onClick={() => setAcceptTradeModal(null)}>✕</a>
+            <h2>Accept Trade</h2>
+            <p className="lead">
+              <b style={{color:"var(--parch-100)"}}>{playersObj[acceptTradeModal.offer.fromUid]?.name}</b> is offering{" "}
+              <b style={{color:"var(--gold-400)"}}>{getCard(acceptTradeModal.offer.offeredCardId)?.name}</b>.{" "}
+              Pick one of your cards to give in return:
+            </p>
+            {handEntries.length === 0
+              ? <p style={{color:"var(--ink-400)",fontSize:13,margin:"0 0 16px"}}>Your hand is empty — you have nothing to offer.</p>
+              : (
+                <div className="target-list" style={{marginBottom:16}}>
+                  {handEntries.map(([k, id]) => {
+                    const c = getCard(id);
+                    if (!c) return null;
+                    return (
+                      <div key={k}
+                        className={`target eco ${myTradeCard?.handKey===k?"selected":""}`}
+                        onClick={() => setMyTradeCard({handKey:k, cardId:id})}>
+                        <div style={{width:28,height:28,borderRadius:"50%",background:"var(--ink-600)",display:"grid",placeItems:"center",fontSize:15,flexShrink:0,fontFamily:"var(--font-mono)"}}>
+                          {c.glyph}
+                        </div>
+                        <div>
+                          <div style={{color:"var(--parch-50)",fontSize:13}}>{c.name}</div>
+                          <div style={{color:"var(--ink-400)",fontSize:10,fontFamily:"var(--font-mono)"}}>{c.cat}{c.cost?.gold>0?` · ${c.cost.gold}M gold`:""}{c.cost?.sci>0?` · ${c.cost.sci}SP`:""}</div>
+                        </div>
+                        <span style={{fontFamily:"var(--font-mono)",fontSize:9,color:"var(--eco-400)",letterSpacing:"0.1em"}}>
+                          {myTradeCard?.handKey===k ? "SELECTED" : ""}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )
+            }
+            <div className="footer-actions">
+              <button className="btn ghost" disabled={busy}
+                onClick={() => safe(async () => {
+                  await window.api.declineTrade(code, acceptTradeModal.tradeKey);
+                  setAcceptTradeModal(null);
+                  showToast("Trade declined.");
+                })}>
+                Decline
+              </button>
+              <button className="btn primary" disabled={!myTradeCard || busy}
+                onClick={() => safe(async () => {
+                  await window.api.acceptTrade(code, acceptTradeModal.tradeKey, myTradeCard.handKey, myTradeCard.cardId);
+                  setAcceptTradeModal(null); setMyTradeCard(null);
+                  showToast("Trade complete!");
+                })}>
+                Accept Trade →
+              </button>
             </div>
           </div>
         </div>

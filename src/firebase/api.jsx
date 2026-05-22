@@ -640,10 +640,110 @@
     });
   }
 
+  // Propose a card trade: offer one of your hand cards to another player
+  async function proposeTrade(code, offeredHandKey, offeredCardId, toUid) {
+    const uid = await _uid();
+    if (uid === toUid) throw new Error("Cannot trade with yourself.");
+
+    const gameSnap = await gref(code).once("value");
+    const game = gameSnap.val();
+    if (!game || game.meta.status !== "playing") throw new Error("Game not in progress.");
+    if (!game.players[toUid]) throw new Error("Target player not in game.");
+
+    const hand = game.hand?.[uid] || {};
+    if (hand[offeredHandKey] !== offeredCardId) throw new Error("Card not in your hand.");
+
+    // Cancel any existing pending offer for the same card slot
+    const existing = game.tradeOffers || {};
+    const cancelUpdates = {};
+    for (const [k, o] of Object.entries(existing)) {
+      if (o.fromUid === uid && o.offeredHandKey === offeredHandKey && o.status === "pending") {
+        cancelUpdates[`tradeOffers/${k}/status`] = "cancelled";
+      }
+    }
+    if (Object.keys(cancelUpdates).length) await gref(code).update(cancelUpdates);
+
+    const tradeKey = gref(code, "tradeOffers").push().key;
+    await gref(code, `tradeOffers/${tradeKey}`).set({
+      fromUid: uid,
+      toUid,
+      offeredHandKey,
+      offeredCardId,
+      status: "pending",
+      createdAt: Date.now(),
+    });
+  }
+
+  // Accept a trade offer by picking one of your own cards to give back
+  async function acceptTrade(code, tradeKey, yourHandKey, yourCardId) {
+    const uid = await _uid();
+
+    const gameSnap = await gref(code).once("value");
+    const game = gameSnap.val();
+    if (!game || game.meta.status !== "playing") throw new Error("Game not in progress.");
+
+    const offer = game.tradeOffers?.[tradeKey];
+    if (!offer) throw new Error("Trade offer not found.");
+    if (offer.toUid !== uid) throw new Error("This offer is not for you.");
+    if (offer.status !== "pending") throw new Error("This offer is no longer active.");
+
+    const yourHand = game.hand?.[uid] || {};
+    if (yourHand[yourHandKey] !== yourCardId) throw new Error("Card not in your hand.");
+
+    // Atomically verify and remove the offered card from proposer's hand
+    const tx = await gref(code, `hand/${offer.fromUid}/${offer.offeredHandKey}`).transaction((cur) => {
+      if (cur !== offer.offeredCardId) return undefined; // abort — card already gone
+      return null;
+    });
+    if (!tx.committed) throw new Error("The offered card is no longer available.");
+
+    const newKeyForProposer = gref(code, `hand/${offer.fromUid}`).push().key;
+    const newKeyForYou = gref(code, `hand/${uid}`).push().key;
+
+    await gref(code).update({
+      [`hand/${uid}/${yourHandKey}`]: null,
+      [`hand/${uid}/${newKeyForYou}`]: offer.offeredCardId,
+      [`hand/${offer.fromUid}/${newKeyForProposer}`]: yourCardId,
+      [`tradeOffers/${tradeKey}/status`]: "accepted",
+    });
+
+    const fromName = game.players?.[offer.fromUid]?.name || "Unknown";
+    const toName = game.players?.[uid]?.name || "Unknown";
+    const offeredCard = window.getCardById(offer.offeredCardId);
+    const givenCard = window.getCardById(yourCardId);
+    await gref(code, "log").push({
+      year: game.meta.year,
+      text: `${fromName} and ${toName} exchanged cards: ${offeredCard?.name || offer.offeredCardId} for ${givenCard?.name || yourCardId}.`,
+      kind: "eco",
+      ts: Date.now(),
+    });
+  }
+
+  // Decline an incoming trade offer
+  async function declineTrade(code, tradeKey) {
+    const uid = await _uid();
+    const snap = await gref(code, `tradeOffers/${tradeKey}`).once("value");
+    const offer = snap.val();
+    if (!offer || offer.toUid !== uid) throw new Error("Not your offer to decline.");
+    if (offer.status !== "pending") return;
+    await gref(code, `tradeOffers/${tradeKey}/status`).set("declined");
+  }
+
+  // Cancel one of your own pending trade offers
+  async function cancelTrade(code, tradeKey) {
+    const uid = await _uid();
+    const snap = await gref(code, `tradeOffers/${tradeKey}`).once("value");
+    const offer = snap.val();
+    if (!offer || offer.fromUid !== uid) throw new Error("Not your offer.");
+    if (offer.status !== "pending") return;
+    await gref(code, `tradeOffers/${tradeKey}/status`).set("cancelled");
+  }
+
   // Expose
   window.api = {
     createGame, joinGame, leaveGame, setReady, selectCountry, startGame,
     buyCard, playEconScience, playBank, attackPlayer, endTurn, discardCard,
+    proposeTrade, acceptTrade, declineTrade, cancelTrade,
     TURN_SECONDS,
     MAX_HAND_SIZE,
   };
