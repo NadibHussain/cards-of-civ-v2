@@ -477,9 +477,6 @@
 /* Chronicle FAB (mobile only — hidden on desktop) */
 .chronicle-fab {
   display: none;
-  position: absolute;
-  top: 12px;
-  right: 12px;
   background: var(--ink-800);
   border: 1px solid var(--ink-600);
   border-radius: 999px;

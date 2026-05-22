@@ -14,6 +14,7 @@ function Game({ game, code, uid, loading, onLeave }) {
   const [shopTab, setShopTab] = React.useState("all");
   const [handOpen, setHandOpen] = React.useState(true);
   const [chronicleOpen, setChronicleOpen] = React.useState(false);
+  const [buyConfirmCard, setBuyConfirmCard] = React.useState(null);
   const [busy, setBusy] = React.useState(false);
   const [attackAnim, setAttackAnim] = React.useState(null);
   const mountTimeRef = React.useRef(Date.now());
@@ -103,8 +104,16 @@ function Game({ game, code, uid, loading, onLeave }) {
   }
 
   function buyFromStore(card) {
-    if (!yourTurn) return;
-    safe(() => window.api.buyCard(code, card.id));
+    if (!yourTurn || busy) return;
+    setBuyConfirmCard(card);
+  }
+
+  function confirmBuyCard() {
+    if (!buyConfirmCard) return;
+    safe(async () => {
+      await window.api.buyCard(code, buyConfirmCard.id);
+      setBuyConfirmCard(null);
+    });
   }
 
   function targetThis(p) {
@@ -199,6 +208,11 @@ function Game({ game, code, uid, loading, onLeave }) {
           </>}
           <span className="sep">·</span>
           <button className="btn ghost" style={{padding:"6px 10px",fontSize:11,minHeight:0}} onClick={onLeave}>Leave</button>
+          <button className="chronicle-fab" onClick={() => setChronicleOpen(true)}>
+            <span className="g">📜</span>
+            <span className="t">Chronicle</span>
+            <span className="c">{log.length}</span>
+          </button>
         </div>
       </div>
 
@@ -269,11 +283,6 @@ function Game({ game, code, uid, loading, onLeave }) {
           </ul>
         </div>
 
-        <button className="chronicle-fab" onClick={() => setChronicleOpen(true)}>
-          <span className="g">📜</span>
-          <span className="t">Chronicle</span>
-          <span className="c">{log.length}</span>
-        </button>
       </div>
 
       {chronicleOpen && (
@@ -350,7 +359,7 @@ function Game({ game, code, uid, loading, onLeave }) {
         </div>
 
         <div className="dash-actions">
-          <button className="shop-btn" onClick={() => setShopOpen(true)} disabled={!yourTurn || busy}>
+          <button className="shop-btn" onClick={() => setShopOpen(true)} disabled={busy}>
             <span className="glyph">⌂</span>
             Store
             <span className="badge">{storeTotal}</span>
@@ -371,6 +380,7 @@ function Game({ game, code, uid, loading, onLeave }) {
             <a className="close" onClick={() => setShopOpen(false)}>✕</a>
             <h2>Store</h2>
             <p className="lead">Cards are always available. Buy any card you can afford. <span style={{color: handEntries.length >= maxHand ? "var(--mil-400)" : "var(--ink-300)"}}>Hand: {handEntries.length}/{maxHand}</span></p>
+            {!yourTurn && <p style={{color:"var(--gold-400)",fontFamily:"var(--font-mono)",fontSize:11,letterSpacing:"0.08em",margin:"0 0 12px",padding:"8px 12px",background:"rgba(201,165,90,0.08)",borderRadius:"var(--radius-sm)",border:"1px solid rgba(201,165,90,0.25)"}}>Browse only — purchasing is disabled until your turn.</p>}
             <div className="shop-tabs">
               {["all","military","economy","science"].map(t => (
                 <button key={t}
@@ -448,6 +458,24 @@ function Game({ game, code, uid, loading, onLeave }) {
             <div className="footer-actions">
               <button className="btn ghost" onClick={() => setDiscardModal(null)}>Cancel</button>
               <button className="btn danger" disabled={busy} onClick={confirmDiscard}>Discard →</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {buyConfirmCard && (
+        <div className="modal-backdrop" onClick={() => setBuyConfirmCard(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <a className="close" onClick={() => setBuyConfirmCard(null)}>✕</a>
+            <h2>Buy Card</h2>
+            <p className="lead">
+              Purchase <b style={{color:"var(--parch-100)"}}>{buyConfirmCard.name}</b>?
+              {buyConfirmCard.cost?.gold > 0 && <> Costs <b style={{color:"var(--gold-400)"}}>{buyConfirmCard.cost.gold}M Gold</b>.</>}
+              {buyConfirmCard.cost?.sci > 0 && <> Requires <b style={{color:"var(--sci-400)"}}>{buyConfirmCard.cost.sci} Science</b>.</>}
+            </p>
+            <div className="footer-actions">
+              <button className="btn ghost" onClick={() => setBuyConfirmCard(null)}>Cancel</button>
+              <button className="btn primary" disabled={busy} onClick={confirmBuyCard}>Buy →</button>
             </div>
           </div>
         </div>
