@@ -235,4 +235,5 @@ button { font: inherit; color: inherit; background: none; border: none; cursor: 
   min-height: 48px;
 }
 .modal .target:hover, .modal .target.selected { border-color: var(--mil-500); background: var(--mil-bg); }
+.modal .target.eco:hover, .modal .target.eco.selected { border-color: var(--eco-500); background: var(--eco-bg); }
 .modal .footer-actions { display: flex; justify-content: flex-end; gap: 10px; flex-wrap: wrap; }

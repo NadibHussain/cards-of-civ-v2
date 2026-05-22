@@ -390,6 +390,26 @@
   border-color: var(--mil-400);
 }
 
+/* Trade button (hand card) */
+.trade-btn {
+  font-size: 9px;
+  font-family: var(--font-mono);
+  letter-spacing: 0.08em;
+  color: var(--eco-400);
+  background: transparent;
+  border: 1px solid var(--eco-500);
+  border-radius: 4px;
+  padding: 2px 8px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.trade-btn:hover {
+  background: var(--eco-bg);
+  color: #aac894;
+  border-color: var(--eco-400);
+}
+
 /* Shop button */
 .shop-btn {
   display: inline-flex;
