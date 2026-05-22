@@ -136,6 +136,8 @@
     border-bottom: 1px solid var(--ink-700);
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    pointer-events: auto;
+    flex-wrap: nowrap;
   }
   .hand-float .card { width: 124px; min-height: 156px; }
 
