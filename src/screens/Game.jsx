@@ -25,6 +25,7 @@ function Game({ game, code, uid, loading, onLeave }) {
   const [tradesOpen, setTradesOpen] = React.useState(false);
   const [acceptTradeModal, setAcceptTradeModal] = React.useState(null); // { tradeKey, offer }
   const [myTradeCard, setMyTradeCard] = React.useState(null);   // { handKey, cardId }
+  const [starvationModal, setStarvationModal] = React.useState(null); // { year, events }
 
   const meta = game?.meta || {};
   const playersObj = game?.players || {};
@@ -68,6 +69,13 @@ function Game({ game, code, uid, loading, onLeave }) {
       showToast("Trade offer is no longer active.");
     }
   }, [game?.tradeOffers, acceptTradeModal?.tradeKey]);
+
+  // Show starvation modal to all players when armies go unfed at year end
+  React.useEffect(() => {
+    const batch = game?.lastStarvationBatch;
+    if (!batch || batch.ts <= mountTimeRef.current) return;
+    setStarvationModal(batch);
+  }, [game?.lastStarvationBatch?.ts]);
 
   // Auto-advance turn if expired (any client can trigger; transaction-safe)
   React.useEffect(() => {
@@ -673,6 +681,36 @@ function Game({ game, code, uid, loading, onLeave }) {
             )}
             <div className="footer-actions">
               <button className="btn ghost" onClick={() => setTradesOpen(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {starvationModal && (
+        <div className="modal-backdrop" onClick={() => setStarvationModal(null)}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
+            <a className="close" onClick={() => setStarvationModal(null)}>✕</a>
+            <h2>⚠ Military Starvation — Year {starvationModal.year}</h2>
+            <p className="lead">
+              Some civilizations could not feed their armies this year. Starving units have deserted!
+            </p>
+            <div style={{display:"grid",gap:10,marginBottom:20}}>
+              {starvationModal.events.map((ev, i) => (
+                <div key={i} style={{padding:"12px 16px",background:"rgba(200,60,60,0.12)",border:"1px solid var(--mil-400)",borderRadius:"var(--radius)",display:"grid",gap:4}}>
+                  <div style={{fontSize:14}}>
+                    <b style={{color:"var(--mil-400)"}}>{ev.playerName}</b>
+                    {" "}lost their{" "}
+                    <b style={{color:"var(--parch-100)"}}>{ev.cardName}</b>
+                    {" "}— it deserted due to starvation.
+                  </div>
+                  <div style={{color:"var(--ink-400)",fontSize:11,fontFamily:"var(--font-mono)"}}>
+                    Had {ev.foodHad} food · needed {ev.foodNeeded} food
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="footer-actions">
+              <button className="btn primary" onClick={() => setStarvationModal(null)}>Understood</button>
             </div>
           </div>
         </div>

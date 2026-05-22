@@ -405,15 +405,20 @@
     });
   }
 
+  // Food each military card type consumes per year (spy/drone excluded — not persistent).
+  const MILITARY_FOOD_COST = { infantry: 1, artillery: 2, tank: 2 };
+
   // Compute and apply persistent effects when a new year starts.
   function _yearTickUpdates(game, nextYear) {
     const updates = {};
     const bankLogs = [];
+    const starvationEvents = [];
     const players = _orderedPlayers(game.players);
 
     for (const p of players) {
       const at = p.atWar ? Object.keys(p.atWar).length : 0;
-      const handCards = Object.values(game.hand?.[p.uid] || {});
+      const handEntries = Object.entries(game.hand?.[p.uid] || {});
+      const handCards = handEntries.map(([, id]) => id);
       let goldGain = 0;
       let sciGain = 0;
       let foodGain = 0;
@@ -434,7 +439,38 @@
 
       if (goldGain) updates[`players/${p.uid}/gold`] = (p.gold || 0) + goldGain;
       if (sciGain)  updates[`players/${p.uid}/sci`]  = (p.sci  || 0) + sciGain;
-      if (foodGain) updates[`players/${p.uid}/food`] = (p.food || 0) + foodGain;
+
+      // Military food maintenance: infantry=1, artillery=2, tank=2 per year.
+      const militaryInHand = handEntries.filter(([, id]) => MILITARY_FOOD_COST[id] !== undefined);
+      const totalFoodNeeded = militaryInHand.reduce((sum, [, id]) => sum + MILITARY_FOOD_COST[id], 0);
+      const foodAfterGain = (p.food || 0) + foodGain;
+
+      if (totalFoodNeeded > 0) {
+        if (foodAfterGain >= totalFoodNeeded) {
+          // Enough food — consume it
+          updates[`players/${p.uid}/food`] = foodAfterGain - totalFoodNeeded;
+        } else {
+          // Not enough food — one random military deserts
+          if (militaryInHand.length > 0) {
+            const victimIdx = Math.floor(Math.random() * militaryInHand.length);
+            const [victimKey, victimId] = militaryInHand[victimIdx];
+            updates[`hand/${p.uid}/${victimKey}`] = null;
+            const victimCard = window.getCardById ? window.getCardById(victimId) : null;
+            starvationEvents.push({
+              playerName: p.name,
+              cardName: victimCard?.name || victimId,
+              foodNeeded: totalFoodNeeded,
+              foodHad: foodAfterGain,
+            });
+          }
+          // Apply food gain; do not deduct (military deserted instead)
+          if (foodAfterGain !== (p.food || 0)) {
+            updates[`players/${p.uid}/food`] = foodAfterGain;
+          }
+        }
+      } else {
+        if (foodGain) updates[`players/${p.uid}/food`] = foodAfterGain;
+      }
 
       // Reset war state at year boundary so the peace dividend resets each year
       if (p.atWar && Object.keys(p.atWar).length > 0) {
@@ -476,7 +512,7 @@
       }
     }
 
-    return { updates, pendingLogs, bankLogs };
+    return { updates, pendingLogs, bankLogs, starvationEvents };
   }
 
   function _detectVictory(game) {
@@ -513,7 +549,7 @@
     let nextYear = game.meta.year;
     if (wrapped) {
       nextYear += 1;
-      const { updates: tickUpdates, pendingLogs, bankLogs } = _yearTickUpdates(game, nextYear);
+      const { updates: tickUpdates, pendingLogs, bankLogs, starvationEvents } = _yearTickUpdates(game, nextYear);
       Object.assign(updates, tickUpdates);
       const newLogKey = gref(code, "log").push().key;
       updates[`log/${newLogKey}`] = {
@@ -538,6 +574,21 @@
           text: bl.text,
           kind: bl.kind,
           ts: Date.now() + 2,
+        };
+      }
+      for (const ev of starvationEvents) {
+        const k = gref(code, "log").push().key;
+        updates[`log/${k}`] = {
+          year: nextYear,
+          text: `${ev.playerName}'s ${ev.cardName} deserted — starved (${ev.foodHad}/${ev.foodNeeded} food).`,
+          kind: "war", ts: Date.now() + 3,
+        };
+      }
+      if (starvationEvents.length > 0) {
+        updates["lastStarvationBatch"] = {
+          year: nextYear,
+          events: starvationEvents,
+          ts: Date.now() + 4,
         };
       }
     }
